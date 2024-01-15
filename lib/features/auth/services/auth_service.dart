@@ -11,7 +11,9 @@ class AuthService {
 
   User? get currentUser {
     final user = _client.auth.currentUser;
-    debugPrint('AuthService: Usuario actual solicitado -> ${user?.email ?? "Ninguno"}');
+    debugPrint(
+      'AuthService: Usuario actual solicitado -> ${user?.email ?? "Ninguno"}',
+    );
     return user;
   }
 
@@ -43,8 +45,25 @@ class AuthService {
   }
 
   Future<void> resetPasswordForEmail(String email) async {
-    debugPrint('AuthService: Solicitando recuperación de contraseña para: $email');
+    debugPrint(
+      'AuthService: Solicitando recuperación de contraseña para: $email',
+    );
     await _client.auth.resetPasswordForEmail(email);
     debugPrint('AuthService: Correo de recuperación enviado');
+  }
+
+  Future<bool> checkEmailExists(String email) async {
+    try {
+      debugPrint('AuthService: Verificando si el correo existe: $email');
+      final response = await _client
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+      return response != null;
+    } catch (e) {
+      debugPrint('AuthService: Error al verificar correo: $e');
+      return false;
+    }
   }
 }

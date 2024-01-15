@@ -8,8 +8,7 @@ import 'package:alza/shared/components/bg/bg.dart';
 import 'package:alza/shared/components/ui/button.dart';
 import 'package:alza/shared/components/ui/text_box.dart';
 import 'package:alza/features/auth/providers/auth_provider.dart';
-
-enum AuthStep { email, password }
+import 'package:alza/features/auth/hooks/use_login.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -24,6 +23,7 @@ class _LoginViewState extends State<LoginView>
 
   AuthStep _currentStep = AuthStep.email;
   String _email = '';
+  bool _emailExists = false;
 
   String _systemMessage = 'Bienvenido';
   late AnimationController _lineAnimationController;
@@ -76,59 +76,36 @@ class _LoginViewState extends State<LoginView>
       return;
     }
 
-    if (_currentStep == AuthStep.email) {
-      if (!text.contains('@')) {
-        _changeMessage("Correo inválido");
-        return;
-      }
-      setState(() {
-        _email = text;
-        _currentStep = AuthStep.password;
-        _controller.clear();
-      });
-      _changeMessage("Ingresa tu contraseña");
-    } else {
-      // Step password
-      final password = text;
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
+    if (_currentStep == AuthStep.password) {
       _changeMessage("Validando...");
+    }
 
-      // Intentamos login primero
-      bool success = await authProvider.signIn(_email, password);
+    final result = await AuthHooks.handleAuthFlow(
+      text: text,
+      currentStep: _currentStep,
+      currentEmail: _email,
+      authProvider: authProvider,
+      emailExists: _emailExists,
+    );
 
-      if (success) {
-        _changeMessage("Inicio exitoso");
-        if (mounted) context.go('/home');
-      } else {
-        // Si falló, podría ser contraseña incorrecta o usuario no existe.
-        // Intentamos registrar
-        final errorMsg = authProvider.errorMessage ?? '';
-        if (errorMsg.toLowerCase().contains("invalid login credentials")) {
-          _changeMessage("Creando cuenta...");
-          bool registered = await authProvider.signUp(_email, password);
-          if (registered) {
-            _changeMessage("Registro exitoso. Revisa tu correo.");
-            setState(() {
-              _currentStep = AuthStep.email;
-              _controller.clear();
-              _email = '';
-            });
-          } else {
-            // Si el registro falló, el usuario ya existía y puso mal la contraseña (o ingresó con Google previamente sin password)
-            if ((authProvider.errorMessage ?? '').toLowerCase().contains(
-              "already registered",
-            )) {
-              _changeMessage(
-                "Credenciales inválidas. Usa Google o recupera la contraseña.",
-              );
-            } else {
-              _changeMessage(authProvider.errorMessage ?? "Error de registro");
-            }
-          }
-        } else {
-          _changeMessage(errorMsg);
-        }
+    // Actualiza los estados estéticos y visuales locales
+    setState(() {
+      _currentStep = result.nextStep;
+      _email = result.nextEmail;
+      _emailExists = result.emailExists;
+    });
+
+    _changeMessage(result.systemMessage);
+
+    if (result.shouldClearInput) {
+      _controller.clear();
+    }
+
+    if (result.shouldRedirect) {
+      if (mounted) {
+        context.go('/home');
       }
     }
   }
@@ -136,17 +113,31 @@ class _LoginViewState extends State<LoginView>
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
+
+    final double horizontalPadding = (screenWidth * 0.1).clamp(24.0, 41.0);
+    final double verticalPadding = (screenHeight * 0.15).clamp(60.0, 140.0);
+
+    // Spacing between elements
+    final double dynamicSpacing = (screenHeight * 0.065).clamp(24.0, 70.0);
+
+    // Responsive width of the text input and button
+    final double elementWidth = (screenWidth - 2 * horizontalPadding).clamp(
+      280.0,
+      329.0,
+    );
 
     return AnimatedBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.only(
-              top: 140,
-              bottom: 140,
-              left: 41,
-              right: 41,
+            padding: EdgeInsets.only(
+              top: verticalPadding,
+              bottom: verticalPadding,
+              left: horizontalPadding,
+              right: horizontalPadding,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -160,14 +151,14 @@ class _LoginViewState extends State<LoginView>
                   ),
                 ),
 
-                const SizedBox(height: 70),
+                SizedBox(height: dynamicSpacing),
 
                 Boton(
-                  width: 329,
+                  width: elementWidth,
                   height: 49,
                   text: 'Continuar con',
                   svgPath: 'assets/icons/svg/google.svg',
-                  spacing: 100,
+                  spacing: 170,
                   svgSize: 20,
                   backgroundColor: AppColors.negro.solid,
                   textStyle: AppFonts.montserrat(
@@ -186,16 +177,17 @@ class _LoginViewState extends State<LoginView>
                   },
                 ),
 
-                const SizedBox(height: 70),
-
+                SizedBox(height: dynamicSpacing),
                 CajaTexto(
-                  width: 329,
+                  width: elementWidth,
                   height: 49,
                   controller: _controller,
                   obscureText: _currentStep == AuthStep.password,
                   hintText: _currentStep == AuthStep.email
                       ? "Digita tu correo"
-                      : "Digita tu contraseña",
+                      : (_emailExists
+                            ? "Escribe tu contraseña"
+                            : "Crea una contraseña"),
                   backgroundColor: AppColors.negro.withOpacity(0.80),
                   hintStyle: AppFonts.montserrat(
                     fontSize: 13,
@@ -219,22 +211,24 @@ class _LoginViewState extends State<LoginView>
                         ),
                 ),
 
-                const SizedBox(height: 70),
+                SizedBox(height: dynamicSpacing),
 
-                SizedBox(
-                  height: 60,
+                Container(
+                  constraints: const BoxConstraints(minHeight: 60),
+                  width: elementWidth,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         _systemMessage,
                         style: AppFonts.verdanaPro(
-                          fontSize: 12,
+                          fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: AppColors.azul.solid,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 16),
                       AnimatedBuilder(
                         animation: _lineAnimationController,
                         builder: (context, child) {
@@ -249,15 +243,22 @@ class _LoginViewState extends State<LoginView>
                   ),
                 ),
 
-                const SizedBox(height: 70),
+                SizedBox(height: dynamicSpacing),
 
                 GestureDetector(
                   onTap: () async {
-                    if (_email.isEmpty) {
+                    final emailToRecover = _email.isNotEmpty
+                        ? _email
+                        : _controller.text.trim();
+                    if (emailToRecover.isEmpty) {
                       _changeMessage("Ingresa correo primero");
+                    } else if (!emailToRecover.contains('@')) {
+                      _changeMessage("Correo inválido");
                     } else {
                       _changeMessage("Enviando correo...");
-                      bool sent = await authProvider.resetPassword(_email);
+                      bool sent = await authProvider.resetPassword(
+                        emailToRecover,
+                      );
                       if (sent) {
                         _changeMessage("Correo enviado");
                       } else {
@@ -311,7 +312,7 @@ class _LoginViewState extends State<LoginView>
                   ),
                 ],
 
-                const SizedBox(height: 70),
+                SizedBox(height: dynamicSpacing),
 
                 GestureDetector(
                   onTap: () {

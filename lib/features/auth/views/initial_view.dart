@@ -5,24 +5,22 @@ import 'package:alza/app/style/app_colors.dart';
 import 'package:alza/app/style/app_fonts.dart';
 import 'package:alza/shared/components/bg/bg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
-class SplashView extends StatefulWidget {
-  const SplashView({super.key});
+class InitialView extends StatefulWidget {
+  const InitialView({super.key});
 
   @override
-  State<SplashView> createState() => _SplashViewState();
+  State<InitialView> createState() => _SplashViewState();
 }
 
-class _SplashViewState extends State<SplashView> {
+class _SplashViewState extends State<InitialView> {
   bool _showText = true;
   late Timer _timer;
 
   @override
   void initState() {
     super.initState();
-    // Intercala entre el texto y el logo cada 2.5 segundos
-    _timer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
+    _timer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
       if (mounted) {
         setState(() {
           _showText = !_showText;
@@ -30,15 +28,10 @@ class _SplashViewState extends State<SplashView> {
       }
     });
 
-    // Navegar según la sesión después de 3 segundos
+    // Delega el flujo de sesión completamente a las guardas de GoRouter
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        final session = Supabase.instance.client.auth.currentSession;
-        if (session != null) {
-          context.go('/home');
-        } else {
-          context.go('/login');
-        }
+        context.go('/home');
       }
     });
   }

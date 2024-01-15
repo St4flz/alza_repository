@@ -8,7 +8,7 @@ class Boton extends StatelessWidget {
   final Color? contentColor;
   final TextStyle? textStyle;
   final VoidCallback onPressed;
-  
+
   // Opciones extra para maquetación exacta
   final double? width;
   final double? height;
@@ -33,29 +33,30 @@ class Boton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Si hay parámetros específicos de layout como padding o spacing, 
+    // Si hay parámetros específicos de layout como padding o spacing,
     // forzamos el alineamiento customizado
     final customLayout = paddingLeftText != null || spacing != null;
 
     Widget buttonContent = Row(
       mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: customLayout ? MainAxisAlignment.start : MainAxisAlignment.center,
+      mainAxisAlignment: customLayout
+          ? MainAxisAlignment.start
+          : MainAxisAlignment.center,
       children: [
         if (text != null)
           Padding(
             padding: EdgeInsets.only(left: paddingLeftText ?? 0),
             child: Text(text!, style: textStyle),
           ),
-        if (text != null && svgPath != null)
-          SizedBox(width: spacing ?? 12),
+        if (text != null && svgPath != null) SizedBox(width: spacing ?? 12),
         if (svgPath != null)
           SvgPicture.asset(
             svgPath!,
             width: svgSize,
             height: svgSize,
-            colorFilter: contentColor != null 
-              ? ColorFilter.mode(contentColor!, BlendMode.srcIn) 
-              : null,
+            colorFilter: contentColor != null
+                ? ColorFilter.mode(contentColor!, BlendMode.srcIn)
+                : null,
           ),
       ],
     );
@@ -68,7 +69,9 @@ class Boton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           elevation: 0,
-          padding: customLayout ? EdgeInsets.zero : const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: customLayout
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),

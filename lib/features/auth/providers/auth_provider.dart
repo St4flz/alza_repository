@@ -121,4 +121,17 @@ class AuthProvider extends ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  Future<bool> checkEmailExists(String email) async {
+    try {
+      _setLoading(true);
+      clearMessages();
+      return await _authService.checkEmailExists(email);
+    } catch (e) {
+      _setMessage(error: 'Error al buscar el correo');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
 }

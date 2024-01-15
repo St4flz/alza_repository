@@ -1,15 +1,15 @@
 import 'package:go_router/go_router.dart';
-import 'package:alza/features/auth/views/splash_view.dart';
+import 'package:alza/features/auth/views/initial_view.dart';
 import 'package:alza/features/auth/views/login_view.dart';
 import 'package:alza/features/home/views/home_view.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/splash',
+  initialLocation: '/initial',
   routes: [
-    GoRoute(path: '/', redirect: (context, state) => '/splash'),
-    GoRoute(path: '/login-callback', redirect: (context, state) => '/splash'),
-    GoRoute(path: '/splash', builder: (context, state) => const SplashView()),
+    GoRoute(path: '/', redirect: (context, state) => '/initial'),
+    GoRoute(path: '/login-callback', redirect: (context, state) => '/initial'),
+    GoRoute(path: '/initial', builder: (context, state) => const InitialView()),
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginView(),

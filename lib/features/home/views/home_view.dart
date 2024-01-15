@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:alza/features/auth/providers/auth_provider.dart';
 import 'package:alza/app/style/app_colors.dart';
 import 'package:alza/app/style/app_fonts.dart';
+import 'package:alza/shared/components/bg/bg.dart';
 import 'package:alza/shared/components/ui/button.dart';
 import 'package:alza/features/home/views/components/header_section.dart';
 import 'package:alza/features/home/views/components/total_card.dart';
@@ -47,7 +48,7 @@ class _HomeViewState extends State<HomeView> {
       currentTotal = '200.000';
       titleText = 'Total';
       walletsTitle = 'Billeteras / Transferir';
-      movementsCount = 3;
+      movementsCount = 2;
     } else if (_selectedWallet == 'Efectivo') {
       currentTotal = '125.000';
       titleText = 'Total';
@@ -57,138 +58,140 @@ class _HomeViewState extends State<HomeView> {
       currentTotal = '200.000';
       titleText = 'Total';
       walletsTitle = 'Billeteras / Transferir';
-      movementsCount = 4;
+      movementsCount = 2;
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.blanco.solid,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                HeaderSection(
-                  userName: user?.email,
-                  onTap: () async {
-                    await authProvider.signOut();
-                    if (context.mounted) {
-                      context.go('/login');
-                    }
-                  },
-                ),
-                const SizedBox(height: 32),
-                GrandTotalCard(amount: currentTotal, title: titleText),
-                const SizedBox(height: 32),
-                SectionTitle(title: walletsTitle),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    WalletItem(
-                      title: 'Nequi',
-                      icon: Icons.badge_outlined,
-                      isActive: _selectedWallet == 'Nequi',
-                      onTap: () => _onWalletTapped('Nequi'),
-                    ),
-                    WalletItem(
-                      title: 'Efectivo',
-                      icon: Icons.menu_book,
-                      isActive: _selectedWallet == 'Efectivo',
-                      onTap: () => _onWalletTapped('Efectivo'),
-                    ),
-                    WalletItem(
-                      title: 'Alcancia',
-                      icon: Icons.savings_outlined,
-                      isActive: _selectedWallet == 'Alcancia',
-                      onTap: () => _onWalletTapped('Alcancia'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-                const SectionTitle(title: 'Ultimos movimientos'),
-                const SizedBox(height: 16),
-                ...List.generate(
-                  movementsCount,
-                  (_) => const MovementItemPlaceholder(),
-                ),
-                const SizedBox(height: 32),
-                Center(
-                  child: Boton(
-                    width: 220,
-                    height: 48,
-                    text: 'Cerrar sesión',
-                    backgroundColor: AppColors.negro.solid,
-                    textStyle: AppFonts.montserrat(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.blanco.solid,
-                    ),
-                    onPressed: () async {
+    return AnimatedBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  HeaderSection(
+                    userName: user?.email,
+                    onTap: () async {
                       await authProvider.signOut();
                       if (context.mounted) {
                         context.go('/login');
                       }
                     },
                   ),
+                  const SizedBox(height: 32),
+                  GrandTotalCard(amount: currentTotal, title: titleText),
+                  const SizedBox(height: 32),
+                  SectionTitle(title: walletsTitle),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      WalletItem(
+                        title: 'Nequi',
+                        icon: Icons.badge_outlined,
+                        isActive: _selectedWallet == 'Nequi',
+                        onTap: () => _onWalletTapped('Nequi'),
+                      ),
+                      WalletItem(
+                        title: 'Efectivo',
+                        icon: Icons.menu_book,
+                        isActive: _selectedWallet == 'Efectivo',
+                        onTap: () => _onWalletTapped('Efectivo'),
+                      ),
+                      WalletItem(
+                        title: 'Alcancia',
+                        icon: Icons.savings_outlined,
+                        isActive: _selectedWallet == 'Alcancia',
+                        onTap: () => _onWalletTapped('Alcancia'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  const SectionTitle(title: 'Ultimos movimientos'),
+                  const SizedBox(height: 16),
+                  ...List.generate(
+                    movementsCount,
+                    (_) => const MovementItemPlaceholder(),
+                  ),
+                  const SizedBox(height: 32),
+                  Center(
+                    child: Boton(
+                      width: 220,
+                      height: 48,
+                      text: 'Cerrar sesión',
+                      backgroundColor: AppColors.negro.solid,
+                      textStyle: AppFonts.montserrat(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.blanco.solid,
+                      ),
+                      onPressed: () async {
+                        await authProvider.signOut();
+                        if (context.mounted) {
+                          context.go('/login');
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            ),
+          ),
+        ),
+        floatingActionButton: ActionCrossOverlay(
+          onDefaultTap: () {
+            print("Navegar a vista por defecto");
+          },
+          topAction: CrossMenuItem(
+            icon: Icons.add,
+            onTap: () => print("Acción Arriba"),
+          ),
+          bottomAction: CrossMenuItem(
+            icon: Icons.bar_chart,
+            onTap: () => print("Acción Abajo"),
+          ),
+          leftAction: CrossMenuItem(
+            icon: Icons.local_offer,
+            onTap: () => print("Acción Izquierda"),
+          ),
+          rightAction: CrossMenuItem(
+            icon: Icons.edit_document,
+            onTap: () => print("Acción Derecha"),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.blanco.solid,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.negro.withOpacity(0.05),
+                  spreadRadius: 8,
+                  blurRadius: 10,
                 ),
-                const SizedBox(height: 40),
               ],
             ),
-          ),
-        ),
-      ),
-      floatingActionButton: ActionCrossOverlay(
-        onDefaultTap: () {
-          print("Navegar a vista por defecto");
-        },
-        topAction: CrossMenuItem(
-          icon: Icons.add,
-          onTap: () => print("Acción Arriba"),
-        ),
-        bottomAction: CrossMenuItem(
-          icon: Icons.bar_chart,
-          onTap: () => print("Acción Abajo"),
-        ),
-        leftAction: CrossMenuItem(
-          icon: Icons.local_offer,
-          onTap: () => print("Acción Izquierda"),
-        ),
-        rightAction: CrossMenuItem(
-          icon: Icons.edit_document,
-          onTap: () => print("Acción Derecha"),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.blanco.solid,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.negro.withOpacity(0.05),
-                spreadRadius: 8,
-                blurRadius: 10,
+            child: FloatingActionButton(
+              onPressed: null, // Dejamos que ActionCrossOverlay maneje los gestos
+              backgroundColor: AppColors.blanco.solid,
+              elevation: 0,
+              shape: CircleBorder(
+                side: BorderSide(color: AppColors.verde.solid, width: 2),
               ),
-            ],
-          ),
-          child: FloatingActionButton(
-            onPressed: null, // Dejamos que ActionCrossOverlay maneje los gestos
-            backgroundColor: AppColors.blanco.solid,
-            elevation: 0,
-            shape: CircleBorder(
-              side: BorderSide(color: AppColors.verde.solid, width: 2),
-            ),
-            child: Icon(
-              Icons.playlist_add,
-              color: AppColors.verde.solid,
-              size: 32,
+              child: Icon(
+                Icons.playlist_add,
+                color: AppColors.verde.solid,
+                size: 32,
+              ),
             ),
           ),
         ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: const CustomBottomNav(),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: const CustomBottomNav(),
     );
   }
 }
