@@ -5,6 +5,7 @@ import 'package:alza/theme/app_colors.dart';
 import 'package:alza/theme/app_fonts.dart';
 import 'package:alza/global/app_state.dart';
 import 'package:alza/components/animated_background.dart';
+import 'package:alza/views/login_view.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -22,9 +23,20 @@ class _SplashViewState extends State<SplashView> {
     super.initState();
     // Intercala entre el texto y el logo cada 2.5 segundos
     _timer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
-      setState(() {
-        _showText = !_showText;
-      });
+      if (mounted) {
+        setState(() {
+          _showText = !_showText;
+        });
+      }
+    });
+
+    // Navegar automáticamente a la vista de Login después de 5 segundos
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginView()),
+        );
+      }
     });
   }
 
