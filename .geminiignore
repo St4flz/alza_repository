@@ -1,0 +1,21 @@
+# Excluir carpetas del sistema de Dart/Flutter
+.dart_tool/
+.packages
+build/
+
+# Excluir archivos autogenerados de construcción (frecuentes en Flutter)
+*.g.dart
+*.freezed.dart
+*.generated.dart
+
+# Excluir mocks de pruebas unitarias
+*.mocks.dart
+
+# Opcional: Si usas coberturas de código o web logs
+coverage/
+.webdev/
+
+.idea
+.pub-cache
+*.flutter-plugins-dependencies
+pubspec.lock

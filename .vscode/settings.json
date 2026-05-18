@@ -1,0 +1,14 @@
+{
+    "files.exclude": {
+        "**/*.g.dart": true,
+        "**/*.freezed.dart": true,
+        "**/*.generated.dart": true,
+        "**/*.mocks.dart": true,
+        "**/protocol/*.dart": true,
+        "**/.dart_tool": true,
+        "**/.idea": true,
+        "**/.pub-cache": true,
+        "**/.flutter-plugins-dependencies": true,
+        "**/pubspec.lock": true
+    }
+}

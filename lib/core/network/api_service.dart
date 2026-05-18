@@ -1,0 +1,111 @@
+import 'package:dio/dio.dart';
+import 'package:alza/core/network/dio_client.dart';
+import 'package:alza/core/network/api_response.dart';
+import 'package:alza/core/config/env_config.dart';
+
+/// Servicio centralizado de comunicación con el Backend.
+///
+/// Todas las peticiones HTTP y endpoints del proyecto se definen aquí de forma
+/// unificada. Para cambiar la URL de conexión, edita el valor de `API_BASE_URL` en tu `.env`.
+class ApiService {
+  final Dio _dio = DioClient().dio;
+
+  /// Ruta base del backend con sufijo `/api/v1/` dinámico y seguro.
+  static String get baseUrl {
+    final base = EnvConfig.apiBaseUrl;
+    if (base.isEmpty) return '';
+    final sanitizedBase = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    return '$sanitizedBase/api/v1';
+  }
+
+  // =========================================================================
+  // 1. ENDPOINTS CENTRALIZADOS (AGREGA O EDITA TUS ENDPOINTS AQUÍ)
+  // =========================================================================
+
+  /// Endpoint de ejemplo para obtener el perfil del usuario autenticado.
+  /// (El backend obtiene el `user_id` del token JWT automáticamente).
+  Future<ApiResponse<Map<String, dynamic>>> getUserProfile() async {
+    return _request<Map<String, dynamic>>(
+      method: 'GET',
+      path: '/user/profile',
+    );
+  }
+
+  /// Endpoint de ejemplo para obtener la lista de billeteras del usuario.
+  Future<ApiResponse<List<dynamic>>> getWallets() async {
+    return _request<List<dynamic>>(
+      method: 'GET',
+      path: '/wallets',
+    );
+  }
+
+  /// Endpoint de ejemplo para registrar un nuevo movimiento financiero.
+  Future<ApiResponse<Map<String, dynamic>>> createMovement(Map<String, dynamic> data) async {
+    return _request<Map<String, dynamic>>(
+      method: 'POST',
+      path: '/movements',
+      data: data,
+    );
+  }
+
+  /// Endpoint de ejemplo para obtener el historial de últimos movimientos.
+  Future<ApiResponse<List<dynamic>>> getMovements() async {
+    return _request<List<dynamic>>(
+      method: 'GET',
+      path: '/movements',
+    );
+  }
+
+  // =========================================================================
+  // 2. MÉTODOS DE PETICIÓN AUXILIARES GENÉRICOS (NO MODIFICAR)
+  // =========================================================================
+
+  /// Método genérico centralizado para formatear peticiones, adjuntar rutas
+  /// y parsear respuestas automáticamente al formato estándar `ApiResponse<T>`.
+  Future<ApiResponse<T>> _request<T>({
+    required String method,
+    required String path,
+    Map<String, dynamic>? queryParameters,
+    dynamic data,
+  }) async {
+    try {
+      final String fullUrl = path.startsWith('http') ? path : '$baseUrl$path';
+
+      final response = await _dio.request(
+        fullUrl,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(method: method),
+      );
+
+      if (response.data is Map<String, dynamic>) {
+        return ApiResponse<T>.fromJson(
+          response.data as Map<String, dynamic>,
+          (json) => json as T,
+        );
+      } else {
+        return ApiResponse<T>(
+          success: false,
+          message: 'El servidor retornó un formato de datos inesperado.',
+        );
+      }
+    } on DioException catch (e) {
+      final responseData = e.response?.data;
+      if (responseData is Map<String, dynamic>) {
+        return ApiResponse<T>.fromJson(
+          responseData,
+          (json) => json as T,
+        );
+      }
+      return ApiResponse<T>(
+        success: false,
+        message: e.message ?? 'Ocurrió un error al conectar con el servidor.',
+      );
+    } catch (e) {
+      return ApiResponse<T>(
+        success: false,
+        message: e.toString(),
+      );
+    }
+  }
+}
