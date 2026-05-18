@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:alza/theme/app_colors.dart';
-import 'package:alza/views/splash_view.dart';
+import 'package:alza/views/dashboard_view.dart';
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: AppColors.blanco.solid,
         primaryColor: AppColors.verde.solid,
       ),
-      home: const SplashView(),
+      home: const DashboardView(),
     );
   }
 }
