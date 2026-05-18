@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:alza/theme/app_colors.dart';
 import 'package:alza/theme/app_fonts.dart';
-import 'package:alza/global/app_state.dart';
 import 'package:alza/components/animated_background.dart';
-import 'package:alza/views/login_view.dart';
+import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -30,12 +30,15 @@ class _SplashViewState extends State<SplashView> {
       }
     });
 
-    // Navegar automáticamente a la vista de Login después de 5 segundos
-    Future.delayed(const Duration(seconds: 5), () {
+    // Navegar según la sesión después de 3 segundos
+    Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LoginView()),
-        );
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null) {
+          context.go('/home');
+        } else {
+          context.go('/login');
+        }
       }
     });
   }
@@ -79,14 +82,6 @@ class _SplashViewState extends State<SplashView> {
                     ),
                   ),
           ),
-        ),
-        // Mantengo el botón para que sigas pudiendo alternar el tema y ver cómo reacciona el fondo
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            tema.value = tema.value == 'claro' ? 'oscuro' : 'claro';
-          },
-          backgroundColor: AppColors.verde.solid,
-          child: const Icon(Icons.brightness_6, color: Colors.white),
         ),
       ),
     );
