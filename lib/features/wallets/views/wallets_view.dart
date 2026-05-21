@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:alza/app/style/app_colors.dart';
 import 'package:alza/app/style/app_fonts.dart';
 import 'package:alza/shared/components/bg/bg.dart';
-import 'package:alza/features/home/views/components/wallet_model.dart';
+import 'package:alza/features/wallets/models/wallet_model.dart';
+import 'package:alza/features/wallets/providers/wallets_provider.dart';
 import 'package:alza/features/home/views/components/wallet_list_item.dart';
 import 'package:alza/features/home/views/components/percentage_bar.dart';
 import 'package:alza/features/home/views/components/wallet_edit_sheet.dart';
@@ -16,33 +18,17 @@ class WalletsView extends StatefulWidget {
 }
 
 class _WalletsViewState extends State<WalletsView> {
-  final List<Wallet> _wallets = [
-    Wallet(
-      id: '1',
-      name: 'Nequi',
-      balance: 200000,
-      icon: Icons.badge_outlined,
-      color: AppColors.verde.solid,
-    ),
-    Wallet(
-      id: '2',
-      name: 'Alcancía',
-      balance: 200000,
-      icon: Icons.savings_outlined,
-      color: AppColors.verde.solid,
-    ),
-    Wallet(
-      id: '3',
-      name: 'Efectivo',
-      balance: 200000,
-      icon: Icons.menu_book_rounded,
-      color: AppColors.verde.solid,
-    ),
-  ];
-
   Wallet? _selectedWallet;
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _balanceController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<WalletsProvider>(context, listen: false).fetchWallets();
+    });
+  }
 
   @override
   void dispose() {
@@ -73,7 +59,7 @@ class _WalletsViewState extends State<WalletsView> {
     });
   }
 
-  void _saveEdits() {
+  Future<void> _saveEdits() async {
     if (_selectedWallet == null) return;
     final String newName = _nameController.text.trim();
     final double? newBalance = double.tryParse(_balanceController.text.trim());
@@ -85,51 +71,76 @@ class _WalletsViewState extends State<WalletsView> {
       return;
     }
 
-    setState(() {
-      _selectedWallet!.name = newName;
-      if (newBalance != null) {
-        _selectedWallet!.balance = newBalance;
-      }
-      _selectedWallet = null;
-      _nameController.clear();
-      _balanceController.clear();
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Billetera actualizada con éxito.'),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
+    final provider = Provider.of<WalletsProvider>(context, listen: false);
+    final success = await provider.updateWallet(
+      _selectedWallet!.id,
+      name: newName,
+      balance: newBalance,
+      icon: _selectedWallet!.icon,
+      color: _selectedWallet!.color,
     );
+
+    if (success) {
+      setState(() {
+        _selectedWallet = null;
+        _nameController.clear();
+        _balanceController.clear();
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Billetera actualizada con éxito.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage ?? 'Error al actualizar la billetera.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
-  void _deleteWallet(Wallet wallet) {
-    final int index = _wallets.indexWhere((w) => w.id == wallet.id);
-    if (index == -1) return;
+  Future<void> _deleteWallet(Wallet wallet) async {
+    final provider = Provider.of<WalletsProvider>(context, listen: false);
+    final success = await provider.deleteWallet(wallet.id);
 
-    setState(() {
-      _wallets.removeAt(index);
-      _selectedWallet = null;
-      _nameController.clear();
-      _balanceController.clear();
-    });
+    if (success) {
+      setState(() {
+        _selectedWallet = null;
+        _nameController.clear();
+        _balanceController.clear();
+      });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Billetera "${wallet.name}" eliminada.'),
-        action: SnackBarAction(
-          label: 'Deshacer',
-          textColor: Colors.amber,
-          onPressed: () {
-            setState(() {
-              _wallets.insert(index, wallet);
-            });
-          },
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Billetera "${wallet.name}" eliminada.'),
+          action: SnackBarAction(
+            label: 'Deshacer',
+            textColor: Colors.amber,
+            onPressed: () async {
+              await provider.createWallet(
+                name: wallet.name,
+                balance: wallet.balance,
+                icon: wallet.icon,
+                color: wallet.color,
+              );
+            },
+          ),
+          duration: const Duration(seconds: 4),
         ),
-        duration: const Duration(seconds: 4),
-      ),
-    );
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(provider.errorMessage ?? 'Error al eliminar la billetera.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _openCustomizer() {
@@ -254,24 +265,38 @@ class _WalletsViewState extends State<WalletsView> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final name = nameCtrl.text.trim();
                     final balanceStr = balanceCtrl.text.trim();
                     if (name.isEmpty) return;
 
                     final balance = double.tryParse(balanceStr) ?? 0.0;
 
-                    setState(() {
-                      _wallets.add(Wallet(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        name: name,
-                        balance: balance,
-                        icon: selectedIcon,
-                        color: selectedColor,
-                      ));
-                    });
-
+                    final provider = Provider.of<WalletsProvider>(context, listen: false);
                     Navigator.pop(context);
+
+                    final success = await provider.createWallet(
+                      name: name,
+                      balance: balance,
+                      icon: selectedIcon,
+                      color: selectedColor,
+                    );
+
+                    if (!success) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(provider.errorMessage ?? 'Error al crear la billetera.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Billetera creada con éxito.'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.negro.solid,
@@ -377,6 +402,9 @@ class _WalletsViewState extends State<WalletsView> {
 
   @override
   Widget build(BuildContext context) {
+    final walletsProvider = Provider.of<WalletsProvider>(context);
+    final wallets = walletsProvider.wallets;
+
     return AnimatedBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -413,7 +441,7 @@ class _WalletsViewState extends State<WalletsView> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            '(${_wallets.length})',
+                            '(${wallets.length})',
                             style: AppFonts.montserrat(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
@@ -435,21 +463,44 @@ class _WalletsViewState extends State<WalletsView> {
                   const SizedBox(height: 16),
 
                   // Wallets Vertical List
-                  Column(
-                    children: _wallets.map((wallet) {
-                      return WalletListItem(
-                        title: wallet.name,
-                        balanceText: _formatCurrency(wallet.balance),
-                        icon: wallet.icon,
-                        isActive: _selectedWallet?.id == wallet.id,
-                        activeColor: wallet.color,
-                        onTap: () => _onWalletTapped(wallet),
-                      );
-                    }).toList(),
-                  ),
+                  if (walletsProvider.isLoading && wallets.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32.0),
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00D764)),
+                        ),
+                      ),
+                    )
+                  else if (wallets.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 32.0),
+                        child: Text(
+                          'No tienes billeteras registradas.',
+                          style: AppFonts.montserrat(
+                            fontSize: 16,
+                            color: AppColors.negro.solid.withOpacity(0.5),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    Column(
+                      children: wallets.map((wallet) {
+                        return WalletListItem(
+                          title: wallet.name,
+                          balanceText: _formatCurrency(wallet.balance),
+                          icon: wallet.icon,
+                          isActive: _selectedWallet?.id == wallet.id,
+                          activeColor: wallet.color,
+                          onTap: () => _onWalletTapped(wallet),
+                        );
+                      }).toList(),
+                    ),
 
                   // Percentage Progress Bar
-                  PercentageBar(wallets: _wallets),
+                  PercentageBar(wallets: wallets),
 
                   const SizedBox(height: 8),
 

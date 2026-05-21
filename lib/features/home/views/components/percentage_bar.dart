@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alza/app/style/app_colors.dart';
 import 'package:alza/app/style/app_fonts.dart';
-import 'package:alza/features/home/views/components/wallet_model.dart';
+import 'package:alza/features/wallets/models/wallet_model.dart';
 
 class PercentageBar extends StatelessWidget {
   final List<Wallet> wallets;

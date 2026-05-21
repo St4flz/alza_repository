@@ -31,11 +31,45 @@ class ApiService {
     );
   }
 
-  /// Endpoint de ejemplo para obtener la lista de billeteras del usuario.
+  /// Endpoint para obtener la lista de billeteras del usuario.
   Future<ApiResponse<List<dynamic>>> getWallets() async {
     return _request<List<dynamic>>(
       method: 'GET',
       path: '/wallets',
+    );
+  }
+
+  /// Endpoint para crear una nueva billetera.
+  Future<ApiResponse<Map<String, dynamic>>> createWallet(Map<String, dynamic> data) async {
+    return _request<Map<String, dynamic>>(
+      method: 'POST',
+      path: '/wallets',
+      data: data,
+    );
+  }
+
+  /// Endpoint para obtener el detalle de una billetera específica.
+  Future<ApiResponse<Map<String, dynamic>>> getWalletById(String walletId) async {
+    return _request<Map<String, dynamic>>(
+      method: 'GET',
+      path: '/wallets/$walletId',
+    );
+  }
+
+  /// Endpoint para actualizar los datos de una billetera.
+  Future<ApiResponse<Map<String, dynamic>>> updateWallet(String walletId, Map<String, dynamic> data) async {
+    return _request<Map<String, dynamic>>(
+      method: 'PATCH',
+      path: '/wallets/$walletId',
+      data: data,
+    );
+  }
+
+  /// Endpoint para eliminar una billetera.
+  Future<ApiResponse<Map<String, dynamic>>> deleteWallet(String walletId) async {
+    return _request<Map<String, dynamic>>(
+      method: 'DELETE',
+      path: '/wallets/$walletId',
     );
   }
 

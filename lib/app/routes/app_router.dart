@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:alza/features/auth/views/initial_view.dart';
 import 'package:alza/features/auth/views/login_view.dart';
 import 'package:alza/features/home/views/home_view.dart';
-import 'package:alza/features/home/views/wallets_view.dart';
+import 'package:alza/features/wallets/views/wallets_view.dart';
 import 'package:alza/features/user/views/change_password_view.dart';
 
 // Constantes de rutas para evitar typos
@@ -45,6 +45,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.home,
       builder: (context, state) => const HomeView(),
+    ),
+    GoRoute(
+      path: AppRoutes.wallets,
+      builder: (context, state) => const WalletsView(),
     ),
     GoRoute(
       path: AppRoutes.resetPassword,
