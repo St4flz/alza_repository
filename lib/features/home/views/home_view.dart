@@ -103,17 +103,43 @@ class _HomeViewState extends State<HomeView> {
             icon: Icons.add,
             onTap: () => print("Acción Arriba"),
           ),
+          topLeftAction: CrossMenuItem(
+            icon: Icons.local_offer,
+            onTap: () => print("Acción Arriba-Izquierda"),
+          ),
+          topRightAction: CrossMenuItem(
+            icon: Icons.grid_view,
+            onTap: () => print("Acción Arriba-Derecha"),
+          ),
           bottomAction: CrossMenuItem(
             icon: Icons.bar_chart,
             onTap: () => print("Acción Abajo"),
+          ),
+          bottomLeftAction: CrossMenuItem(
+            icon: Icons.local_offer,
+            onTap: () => print("Acción Abajo-Izquierda"),
+          ),
+          bottomRightAction: CrossMenuItem(
+            icon: Icons.grid_view,
+            onTap: () => print("Acción Abajo-Derecha"),
           ),
           leftAction: CrossMenuItem(
             icon: Icons.local_offer,
             onTap: () => print("Acción Izquierda"),
           ),
+          leftTopAction: null,
+          leftBottomAction: null,
           rightAction: CrossMenuItem(
             icon: Icons.edit_document,
             onTap: () => print("Acción Derecha"),
+          ),
+          rightTopAction: CrossMenuItem(
+            icon: Icons.mic,
+            onTap: () => print("Acción Derecha-Arriba"),
+          ),
+          rightBottomAction: CrossMenuItem(
+            icon: Icons.camera_alt,
+            onTap: () => print("Acción Derecha-Abajo"),
           ),
           child: Container(
             padding: const EdgeInsets.all(4),
