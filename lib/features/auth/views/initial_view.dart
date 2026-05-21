@@ -19,7 +19,11 @@ class _InitialViewState extends State<InitialView> {
     // Aquí es donde en el futuro se pueden añadir llamadas de precarga/inicialización.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        context.go('/home');
+        final router = GoRouter.of(context);
+        final currentPath = router.routerDelegate.currentConfiguration.uri.path;
+        if (currentPath == '/' || currentPath == '/initial') {
+          context.go('/home');
+        }
       }
     });
   }

@@ -108,8 +108,28 @@ class AuthProvider extends ChangeNotifier {
       debugPrint('AuthProvider: Ejecutando resetPassword');
       _setLoading(true);
       clearMessages();
-      await _authService.resetPasswordForEmail(email);
+      const redirectTo = kIsWeb ? null : 'alza://reset-password';
+      await _authService.resetPasswordForEmail(email, redirectTo: redirectTo);
       _setMessage(success: 'Correo de recuperación enviado');
+      return true;
+    } on AuthException catch (e) {
+      _setMessage(error: e.message);
+      return false;
+    } catch (e) {
+      _setMessage(error: 'Error inesperado: $e');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> updatePassword(String newPassword) async {
+    try {
+      debugPrint('AuthProvider: Ejecutando updatePassword');
+      _setLoading(true);
+      clearMessages();
+      await _authService.updatePassword(newPassword);
+      _setMessage(success: 'Contraseña actualizada correctamente');
       return true;
     } on AuthException catch (e) {
       _setMessage(error: e.message);

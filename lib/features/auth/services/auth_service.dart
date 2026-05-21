@@ -34,7 +34,7 @@ class AuthService {
     debugPrint('AuthService: Iniciando flujo OAuth con Google');
     return await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: 'alza://login-callback',
+      redirectTo: kIsWeb ? null : 'alza://login-callback',
     );
   }
 
@@ -44,12 +44,21 @@ class AuthService {
     debugPrint('AuthService: Sesión cerrada exitosamente');
   }
 
-  Future<void> resetPasswordForEmail(String email) async {
+  Future<void> resetPasswordForEmail(String email, {String? redirectTo}) async {
     debugPrint(
-      'AuthService: Solicitando recuperación de contraseña para: $email',
+      'AuthService: Solicitando recuperación de contraseña para: $email con redirección a: $redirectTo',
     );
-    await _client.auth.resetPasswordForEmail(email);
+    await _client.auth.resetPasswordForEmail(email, redirectTo: redirectTo);
     debugPrint('AuthService: Correo de recuperación enviado');
+  }
+
+  Future<UserResponse> updatePassword(String newPassword) async {
+    debugPrint('AuthService: Actualizando contraseña del usuario');
+    return await _client.auth.updateUser(
+      UserAttributes(
+        password: newPassword,
+      ),
+    );
   }
 
   Future<bool> checkEmailExists(String email) async {

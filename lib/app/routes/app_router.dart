@@ -5,6 +5,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:alza/features/auth/views/initial_view.dart';
 import 'package:alza/features/auth/views/login_view.dart';
 import 'package:alza/features/home/views/home_view.dart';
+import 'package:alza/features/home/views/wallets_view.dart';
+import 'package:alza/features/user/views/change_password_view.dart';
 
 // Constantes de rutas para evitar typos
 abstract class AppRoutes {
@@ -12,6 +14,9 @@ abstract class AppRoutes {
   static const String login = '/login';
   static const String loginCallback = '/login-callback';
   static const String home = '/home';
+  static const String wallets = '/wallets';
+  static const String resetPassword = '/reset-password';
+  static const String changePassword = '/change-password';
 }
 
 final appRouter = GoRouter(
@@ -30,12 +35,28 @@ final appRouter = GoRouter(
       redirect: (context, state) => AppRoutes.home,
     ),
     GoRoute(
+      path: '/login-callback',
+      redirect: (context, state) => AppRoutes.home,
+    ),
+    GoRoute(
       path: AppRoutes.login,
       builder: (context, state) => const LoginView(),
     ),
     GoRoute(
       path: AppRoutes.home,
       builder: (context, state) => const HomeView(),
+    ),
+    GoRoute(
+      path: AppRoutes.resetPassword,
+      redirect: (context, state) => AppRoutes.changePassword,
+    ),
+    GoRoute(
+      path: '/reset-password',
+      redirect: (context, state) => AppRoutes.changePassword,
+    ),
+    GoRoute(
+      path: AppRoutes.changePassword,
+      builder: (context, state) => const ChangePasswordView(),
     ),
   ],
 
@@ -46,9 +67,11 @@ final appRouter = GoRouter(
     
     final isGoingToLogin = state.matchedLocation == AppRoutes.login;
     final isGoingToInitial = state.matchedLocation == AppRoutes.initial;
+    final isGoingToResetPassword = state.matchedLocation == AppRoutes.resetPassword || state.matchedLocation == '/reset-password';
+    final isGoingToChangePassword = state.matchedLocation == AppRoutes.changePassword;
 
     // 1. Usuario no logueado intenta ir a una ruta privada
-    if (!isLoggedIn && !isGoingToLogin && !isGoingToInitial) {
+    if (!isLoggedIn && !isGoingToLogin && !isGoingToInitial && !isGoingToResetPassword && !isGoingToChangePassword) {
       return AppRoutes.login;
     }
 
@@ -67,7 +90,16 @@ class GoRouterRefreshStream extends ChangeNotifier {
 
   GoRouterRefreshStream(Stream<AuthState> stream) {
     notifyListeners();
-    _subscription = stream.listen((_) => notifyListeners());
+    _subscription = stream.listen((data) {
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        debugPrint('GoRouterRefreshStream: passwordRecovery detectado, redirigiendo a ${AppRoutes.changePassword}');
+        Future.microtask(() {
+          appRouter.go(AppRoutes.changePassword);
+        });
+      } else {
+        notifyListeners();
+      }
+    });
   }
 
   @override

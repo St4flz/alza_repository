@@ -4,9 +4,7 @@ import 'package:alza/features/auth/providers/auth_provider.dart';
 import 'package:alza/features/home/providers/home_provider.dart';
 import 'package:alza/features/home/models/cross_menu_item.dart';
 import 'package:alza/app/style/app_colors.dart';
-import 'package:alza/app/style/app_fonts.dart';
 import 'package:alza/shared/components/bg/bg.dart';
-import 'package:alza/shared/components/ui/button.dart';
 import 'package:alza/features/home/views/components/header_section.dart';
 import 'package:alza/features/home/views/components/total_card.dart';
 import 'package:alza/features/home/views/components/section_title.dart';
@@ -55,7 +53,9 @@ class _HomeViewState extends State<HomeView> {
                   GestureDetector(
                     onTap: () => context.push('/wallets'),
                     behavior: HitTestBehavior.opaque,
-                    child: SectionTitle(title: homeProvider.walletsSectionTitle),
+                    child: SectionTitle(
+                      title: homeProvider.walletsSectionTitle,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -64,7 +64,8 @@ class _HomeViewState extends State<HomeView> {
                       return WalletItem(
                         title: wallet.name,
                         icon: wallet.icon,
-                        isActive: homeProvider.selectedWalletName == wallet.name,
+                        isActive:
+                            homeProvider.selectedWalletName == wallet.name,
                         onTap: () => homeProvider.selectWallet(wallet.name),
                       );
                     }).toList(),
@@ -76,24 +77,7 @@ class _HomeViewState extends State<HomeView> {
                     homeProvider.movementsCount,
                     (_) => const MovementItemPlaceholder(),
                   ),
-                  const SizedBox(height: 32),
-                  Center(
-                    child: Boton(
-                      width: 220,
-                      height: 48,
-                      text: 'Cerrar sesión',
-                      backgroundColor: AppColors.negro.solid,
-                      textStyle: AppFonts.montserrat(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.blanco.solid,
-                      ),
-                      onPressed: () async {
-                        await authProvider.signOut();
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
