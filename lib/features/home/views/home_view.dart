@@ -52,7 +52,11 @@ class _HomeViewState extends State<HomeView> {
                     title: homeProvider.totalTitle,
                   ),
                   const SizedBox(height: 32),
-                  SectionTitle(title: homeProvider.walletsSectionTitle),
+                  GestureDetector(
+                    onTap: () => context.push('/wallets'),
+                    behavior: HitTestBehavior.opaque,
+                    child: SectionTitle(title: homeProvider.walletsSectionTitle),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
