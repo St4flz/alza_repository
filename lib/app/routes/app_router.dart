@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:alza/features/auth/views/initial_view.dart';
 import 'package:alza/features/auth/views/login_view.dart';
 import 'package:alza/features/home/views/home_view.dart';
+import 'package:alza/features/home/views/wallets_view.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final appRouter = GoRouter(
@@ -24,6 +25,17 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/home',
       builder: (context, state) => const HomeView(),
+      redirect: (context, state) {
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session == null) {
+          return '/login';
+        }
+        return null;
+      },
+    ),
+    GoRoute(
+      path: '/wallets',
+      builder: (context, state) => const WalletsView(),
       redirect: (context, state) {
         final session = Supabase.instance.client.auth.currentSession;
         if (session == null) {

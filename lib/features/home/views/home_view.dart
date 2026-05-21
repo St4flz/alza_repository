@@ -83,7 +83,11 @@ class _HomeViewState extends State<HomeView> {
                   const SizedBox(height: 32),
                   GrandTotalCard(amount: currentTotal, title: titleText),
                   const SizedBox(height: 32),
-                  SectionTitle(title: walletsTitle),
+                  GestureDetector(
+                    onTap: () => context.push('/wallets'),
+                    behavior: HitTestBehavior.opaque,
+                    child: SectionTitle(title: walletsTitle),
+                  ),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
