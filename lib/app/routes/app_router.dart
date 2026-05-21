@@ -8,7 +8,7 @@ final appRouter = GoRouter(
   initialLocation: '/initial',
   routes: [
     GoRoute(path: '/', redirect: (context, state) => '/initial'),
-    GoRoute(path: '/login-callback', redirect: (context, state) => '/initial'),
+    GoRoute(path: '/login-callback', redirect: (context, state) => '/home'),
     GoRoute(path: '/initial', builder: (context, state) => const InitialView()),
     GoRoute(
       path: '/login',

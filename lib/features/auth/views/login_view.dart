@@ -1,13 +1,22 @@
+//Imports de estilos
+import 'package:alza/app/style/app_colors.dart';
+import 'package:alza/app/style/app_fonts.dart';
+
+//Imports de componentes
+import 'package:alza/shared/components/bg/bg.dart';
+import 'package:alza/shared/components/ui/button.dart';
+import 'package:alza/shared/components/ui/text_box.dart';
+
+//Imports de librerias
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:alza/app/style/app_colors.dart';
-import 'package:alza/app/style/app_fonts.dart';
-import 'package:alza/shared/components/bg/bg.dart';
-import 'package:alza/shared/components/ui/button.dart';
-import 'package:alza/shared/components/ui/text_box.dart';
+
+//Imports de providers
 import 'package:alza/features/auth/providers/auth_provider.dart';
+
+//Imports de hooks
 import 'package:alza/features/auth/hooks/use_login.dart';
 
 class LoginView extends StatefulWidget {

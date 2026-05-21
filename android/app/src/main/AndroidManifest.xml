@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="alza"
+        android:label="Alza+"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -30,7 +30,7 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="myapp" android:host="login-callback"/>
+                <data android:scheme="alza" android:host="login-callback"/>
             </intent-filter>
 
             <!-- Main App Launcher Intent Filter -->

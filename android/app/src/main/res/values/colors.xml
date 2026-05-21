@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colores de marca Alza+ (sincronizados con AppColors en Dart) -->
+    <color name="cian">#FFF0F4FF</color>
+    <color name="blanco">#FFF8F8F6</color>
+    <color name="verde">#FF00D764</color>
+</resources>
