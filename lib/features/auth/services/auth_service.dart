@@ -34,7 +34,7 @@ class AuthService {
     debugPrint('AuthService: Iniciando flujo OAuth con Google');
     return await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: 'myapp://login-callback',
+      redirectTo: 'alza://login-callback',
     );
   }
 
