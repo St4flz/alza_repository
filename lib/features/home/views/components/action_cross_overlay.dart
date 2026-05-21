@@ -31,30 +31,13 @@ class ActionCrossOverlay extends StatefulWidget {
   State<ActionCrossOverlay> createState() => _ActionCrossOverlayState();
 }
 
-class _ActionCrossOverlayState extends State<ActionCrossOverlay>
-    with SingleTickerProviderStateMixin {
+class _ActionCrossOverlayState extends State<ActionCrossOverlay> {
   OverlayEntry? _overlayEntry;
   Offset _dragOffset = Offset.zero;
   String _selectedDirection = '';
-  late AnimationController _pulseController;
-  late Animation<double> _pulseScale;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat(reverse: true);
-
-    _pulseScale = Tween<double>(begin: 0.9, end: 1.2).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
 
   @override
   void dispose() {
-    _pulseController.dispose();
     _removeOverlay();
     super.dispose();
   }
@@ -111,10 +94,6 @@ class _ActionCrossOverlayState extends State<ActionCrossOverlay>
   }
 
   OverlayEntry _createOverlayEntry() {
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final size = renderBox.size;
-    final offset = renderBox.localToGlobal(Offset.zero);
-
     return OverlayEntry(
       builder: (context) {
         return Positioned(
@@ -157,88 +136,39 @@ class _ActionCrossOverlayState extends State<ActionCrossOverlay>
                           ),
                         ),
 
-                        // Icons
-                        if (widget.topAction != null)
+                        // Icons only for the selected direction
+                        if (_selectedDirection == 'top' && widget.topAction != null)
                           Positioned(
                             top: 20,
                             child: _buildIcon(
                               widget.topAction!.icon,
-                              _selectedDirection == 'top',
+                              true,
                             ),
                           ),
-                        if (widget.bottomAction != null)
+                        if (_selectedDirection == 'bottom' && widget.bottomAction != null)
                           Positioned(
                             bottom: 20,
                             child: _buildIcon(
                               widget.bottomAction!.icon,
-                              _selectedDirection == 'bottom',
+                              true,
                             ),
                           ),
-                        if (widget.leftAction != null)
+                        if (_selectedDirection == 'left' && widget.leftAction != null)
                           Positioned(
                             left: 30,
                             child: _buildIcon(
                               widget.leftAction!.icon,
-                              _selectedDirection == 'left',
+                              true,
                             ),
                           ),
-                        if (widget.rightAction != null)
+                        if (_selectedDirection == 'right' && widget.rightAction != null)
                           Positioned(
                             right: 30,
                             child: _buildIcon(
                               widget.rightAction!.icon,
-                              _selectedDirection == 'right',
+                              true,
                             ),
                           ),
-
-                        // Draw dashed line
-                        CustomPaint(
-                          painter: _DashedLinePainter(
-                            start: Offset.zero,
-                            end: _dragOffset,
-                            color: AppColors.verde.solid,
-                          ),
-                          size: const Size(double.infinity, double.infinity),
-                        ),
-
-                        // Pulsing cursor
-                        Transform.translate(
-                          offset: _dragOffset,
-                          child: AnimatedBuilder(
-                            animation: _pulseController,
-                            builder: (context, child) {
-                              return Transform.scale(
-                                scale: _pulseScale.value,
-                                child: Container(
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: AppColors.verde.solid.withOpacity(
-                                        0.4,
-                                      ),
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: Container(
-                                      width: 30,
-                                      height: 30,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color: AppColors.verde.solid,
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
 
                         // Fake center button to match overlay visually
                         Positioned(
@@ -295,54 +225,3 @@ class _ActionCrossOverlayState extends State<ActionCrossOverlay>
   }
 }
 
-class _DashedLinePainter extends CustomPainter {
-  final Offset start;
-  final Offset end;
-  final Color color;
-
-  _DashedLinePainter({
-    required this.start,
-    required this.end,
-    required this.color,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final p1 = center + start;
-    final p2 = center + end;
-
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    double distance = (p2 - p1).distance;
-    if (distance < 15) return;
-
-    final direction = (p2 - p1) / distance;
-
-    // Start drawing a bit outside the center
-    final startOffset = p1 + direction * 25;
-    double drawnLength = 25.0;
-
-    const dashWidth = 5.0;
-    const dashSpace = 6.0;
-
-    while (drawnLength < distance - 25) {
-      // Stop before reaching the cursor
-      final currentP1 = p1 + direction * drawnLength;
-      drawnLength += dashWidth;
-      final endLength = drawnLength > (distance - 25)
-          ? (distance - 25)
-          : drawnLength;
-      final currentP2 = p1 + direction * endLength;
-      canvas.drawLine(currentP1, currentP2, paint);
-      drawnLength += dashSpace;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
