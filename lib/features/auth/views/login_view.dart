@@ -19,6 +19,11 @@ import 'package:alza/features/auth/providers/auth_provider.dart';
 //Imports de hooks
 import 'package:alza/features/auth/hooks/use_login.dart';
 
+//Imports de componentes locales
+import 'package:alza/features/auth/views/components/system_message_banner.dart';
+import 'package:alza/features/auth/views/components/password_recovery_link.dart';
+import 'package:alza/features/auth/views/components/terms_and_conditions_text.dart';
+
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
@@ -26,8 +31,7 @@ class LoginView extends StatefulWidget {
   State<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginViewState extends State<LoginView>
-    with SingleTickerProviderStateMixin {
+class _LoginViewState extends State<LoginView> {
   final TextEditingController _controller = TextEditingController();
 
   AuthStep _currentStep = AuthStep.email;
@@ -35,31 +39,10 @@ class _LoginViewState extends State<LoginView>
   bool _emailExists = false;
 
   String _systemMessage = 'Bienvenido';
-  late AnimationController _lineAnimationController;
-  late Animation<double> _lineWidthAnimation;
 
   @override
   void initState() {
     super.initState();
-
-    _lineAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-
-    _lineWidthAnimation = Tween<double>(begin: 40.0, end: 180.0).animate(
-      CurvedAnimation(parent: _lineAnimationController, curve: Curves.easeOut),
-    );
-
-    _triggerMessageAnimation();
-  }
-
-  void _triggerMessageAnimation() {
-    _lineAnimationController.forward().then((_) {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) _lineAnimationController.reverse();
-      });
-    });
   }
 
   void _changeMessage(String newMessage) {
@@ -67,14 +50,12 @@ class _LoginViewState extends State<LoginView>
       setState(() {
         _systemMessage = newMessage;
       });
-      _triggerMessageAnimation();
     }
   }
 
   @override
   void dispose() {
     _controller.dispose();
-    _lineAnimationController.dispose();
     super.dispose();
   }
 
@@ -110,12 +91,6 @@ class _LoginViewState extends State<LoginView>
 
     if (result.shouldClearInput) {
       _controller.clear();
-    }
-
-    if (result.shouldRedirect) {
-      if (mounted) {
-        context.go('/home');
-      }
     }
   }
 
@@ -211,50 +186,46 @@ class _LoginViewState extends State<LoginView>
                             color: AppColors.blanco.withOpacity(0.40),
                           ),
                         )
-                      : IconButton(
-                          icon: Icon(
-                            Icons.arrow_forward,
-                            color: AppColors.blanco.withOpacity(0.40),
-                          ),
-                          onPressed: _handleNext,
+                      : Row(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            if (_currentStep == AuthStep.password)
+                              IconButton(
+                                icon: Icon(
+                                  Icons.arrow_back,
+                                  color: AppColors.blanco.withOpacity(0.40),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _currentStep = AuthStep.email;
+                                    _controller.clear();
+                                    _email = '';
+                                  });
+                                  _changeMessage("Digita tu correo");
+                                },
+                              ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.arrow_forward,
+                                color: AppColors.blanco.withOpacity(0.40),
+                              ),
+                              onPressed: _handleNext,
+                            ),
+                          ],
                         ),
                 ),
 
                 SizedBox(height: dynamicSpacing),
 
-                Container(
-                  constraints: const BoxConstraints(minHeight: 60),
+                SystemMessageBanner(
+                  message: _systemMessage,
                   width: elementWidth,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _systemMessage,
-                        style: AppFonts.verdanaPro(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.azul.solid,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      AnimatedBuilder(
-                        animation: _lineAnimationController,
-                        builder: (context, child) {
-                          return Container(
-                            height: 3,
-                            width: _lineWidthAnimation.value,
-                            color: AppColors.azul.solid,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
                 ),
 
                 SizedBox(height: dynamicSpacing),
 
-                GestureDetector(
+                PasswordRecoveryLink(
                   onTap: () async {
                     final emailToRecover = _email.isNotEmpty
                         ? _email
@@ -277,79 +248,14 @@ class _LoginViewState extends State<LoginView>
                       }
                     }
                   },
-                  child: RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: AppFonts.montserrat(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w300,
-                        fontStyle: FontStyle.italic,
-                        color: AppColors.negro.withOpacity(0.40),
-                      ),
-                      children: const [
-                        TextSpan(text: '¿No puedes acceder? Presiona '),
-                        TextSpan(
-                          text: 'aquí.',
-                          style: TextStyle(
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
-
-                if (_currentStep == AuthStep.password) ...[
-                  const SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _currentStep = AuthStep.email;
-                        _controller.clear();
-                        _email = '';
-                      });
-                      _changeMessage("Digita tu correo");
-                    },
-                    child: Text(
-                      'Cambiar correo',
-                      style: AppFonts.montserrat(
-                        fontSize: 13,
-                        color: AppColors.azul.solid,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
 
                 SizedBox(height: dynamicSpacing),
 
-                GestureDetector(
+                TermsAndConditionsText(
                   onTap: () {
                     _changeMessage("Términos y condiciones");
                   },
-                  child: RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: AppFonts.montserrat(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w300,
-                        color: AppColors.negro.withOpacity(0.40),
-                      ),
-                      children: [
-                        const TextSpan(
-                          text: 'Al continuar, aceptas nuestros\n',
-                        ),
-                        TextSpan(
-                          text: 'términos y condiciones',
-                          style: AppFonts.montserrat(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.negro.withOpacity(0.40),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
               ],
             ),

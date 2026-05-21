@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:alza/app/style/app_colors.dart';
 import 'package:alza/app/style/app_fonts.dart';
 import 'package:alza/shared/components/bg/bg.dart';
@@ -10,36 +8,20 @@ class InitialView extends StatefulWidget {
   const InitialView({super.key});
 
   @override
-  State<InitialView> createState() => _SplashViewState();
+  State<InitialView> createState() => _InitialViewState();
 }
 
-class _SplashViewState extends State<InitialView> {
-  bool _showText = true;
-  late Timer _timer;
-
+class _InitialViewState extends State<InitialView> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(milliseconds: 1500), (timer) {
-      if (mounted) {
-        setState(() {
-          _showText = !_showText;
-        });
-      }
-    });
-
-    // Delega el flujo de sesión completamente a las guardas de GoRouter
-    Future.delayed(const Duration(seconds: 3), () {
+    // Ejecuta la redirección inmediatamente después de renderizar el primer frame.
+    // Aquí es donde en el futuro se pueden añadir llamadas de precarga/inicialización.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         context.go('/home');
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
   }
 
   @override
@@ -48,32 +30,13 @@ class _SplashViewState extends State<InitialView> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Center(
-          // AnimatedSwitcher es ideal para transicionar suavemente (fade)
-          // entre dos widgets completamente distintos.
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 800),
-            switchInCurve: Curves.easeInOut,
-            switchOutCurve: Curves.easeInOut,
-            child: _showText
-                ? Text(
-                    'Alza+',
-                    key: const ValueKey('text'),
-                    style: AppFonts.verdanaPro(
-                      fontSize: 70,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.verde.solid,
-                    ),
-                  )
-                : SvgPicture.asset(
-                    'assets/icons/svg/logo.svg',
-                    key: const ValueKey('logo'),
-                    width: 200,
-                    height: 200,
-                    colorFilter: ColorFilter.mode(
-                      AppColors.verde.solid,
-                      BlendMode.srcIn,
-                    ),
-                  ),
+          child: Text(
+            'Alza+',
+            style: AppFonts.verdanaPro(
+              fontSize: 70,
+              fontWeight: FontWeight.w700,
+              color: AppColors.verde.solid,
+            ),
           ),
         ),
       ),

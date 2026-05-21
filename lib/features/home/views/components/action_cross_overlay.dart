@@ -1,13 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:alza/app/style/app_colors.dart';
-
-class CrossMenuItem {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  CrossMenuItem({required this.icon, required this.onTap});
-}
+import 'package:alza/features/home/models/cross_menu_item.dart';
 
 class ActionCrossOverlay extends StatefulWidget {
   final VoidCallback onDefaultTap;

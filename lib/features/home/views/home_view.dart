@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alza/features/auth/providers/auth_provider.dart';
+import 'package:alza/features/home/providers/home_provider.dart';
+import 'package:alza/features/home/models/cross_menu_item.dart';
 import 'package:alza/app/style/app_colors.dart';
 import 'package:alza/app/style/app_fonts.dart';
 import 'package:alza/shared/components/bg/bg.dart';
@@ -22,44 +24,11 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  String? _selectedWallet;
-
-  void _onWalletTapped(String walletName) {
-    setState(() {
-      if (_selectedWallet == walletName) {
-        _selectedWallet = null;
-      } else {
-        _selectedWallet = walletName;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
+    final homeProvider = Provider.of<HomeProvider>(context);
     final user = authProvider.currentUser;
-
-    String currentTotal = '525.000';
-    String titleText = 'Gran total';
-    String walletsTitle = 'Billeteras';
-    int movementsCount = 2;
-
-    if (_selectedWallet == 'Nequi') {
-      currentTotal = '200.000';
-      titleText = 'Total';
-      walletsTitle = 'Billeteras / Transferir';
-      movementsCount = 2;
-    } else if (_selectedWallet == 'Efectivo') {
-      currentTotal = '125.000';
-      titleText = 'Total';
-      walletsTitle = 'Billeteras / Transferir';
-      movementsCount = 1;
-    } else if (_selectedWallet == 'Alcancia') {
-      currentTotal = '200.000';
-      titleText = 'Total';
-      walletsTitle = 'Billeteras / Transferir';
-      movementsCount = 2;
-    }
 
     return AnimatedBackground(
       child: Scaffold(
@@ -75,44 +44,32 @@ class _HomeViewState extends State<HomeView> {
                     userName: user?.email,
                     onTap: () async {
                       await authProvider.signOut();
-                      if (context.mounted) {
-                        context.go('/login');
-                      }
                     },
                   ),
                   const SizedBox(height: 32),
-                  GrandTotalCard(amount: currentTotal, title: titleText),
+                  GrandTotalCard(
+                    amount: homeProvider.totalAmount,
+                    title: homeProvider.totalTitle,
+                  ),
                   const SizedBox(height: 32),
-                  SectionTitle(title: walletsTitle),
+                  SectionTitle(title: homeProvider.walletsSectionTitle),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      WalletItem(
-                        title: 'Nequi',
-                        icon: Icons.badge_outlined,
-                        isActive: _selectedWallet == 'Nequi',
-                        onTap: () => _onWalletTapped('Nequi'),
-                      ),
-                      WalletItem(
-                        title: 'Efectivo',
-                        icon: Icons.menu_book,
-                        isActive: _selectedWallet == 'Efectivo',
-                        onTap: () => _onWalletTapped('Efectivo'),
-                      ),
-                      WalletItem(
-                        title: 'Alcancia',
-                        icon: Icons.savings_outlined,
-                        isActive: _selectedWallet == 'Alcancia',
-                        onTap: () => _onWalletTapped('Alcancia'),
-                      ),
-                    ],
+                    children: homeProvider.wallets.map((wallet) {
+                      return WalletItem(
+                        title: wallet.name,
+                        icon: wallet.icon,
+                        isActive: homeProvider.selectedWalletName == wallet.name,
+                        onTap: () => homeProvider.selectWallet(wallet.name),
+                      );
+                    }).toList(),
                   ),
                   const SizedBox(height: 32),
                   const SectionTitle(title: 'Ultimos movimientos'),
                   const SizedBox(height: 16),
                   ...List.generate(
-                    movementsCount,
+                    homeProvider.movementsCount,
                     (_) => const MovementItemPlaceholder(),
                   ),
                   const SizedBox(height: 32),
@@ -129,9 +86,6 @@ class _HomeViewState extends State<HomeView> {
                       ),
                       onPressed: () async {
                         await authProvider.signOut();
-                        if (context.mounted) {
-                          context.go('/login');
-                        }
                       },
                     ),
                   ),
@@ -163,6 +117,7 @@ class _HomeViewState extends State<HomeView> {
           ),
           child: Container(
             padding: const EdgeInsets.all(4),
+            margin: const EdgeInsets.only(bottom: 70),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.blanco.solid,
@@ -175,7 +130,8 @@ class _HomeViewState extends State<HomeView> {
               ],
             ),
             child: FloatingActionButton(
-              onPressed: null, // Dejamos que ActionCrossOverlay maneje los gestos
+              onPressed:
+                  null, // Dejamos que ActionCrossOverlay maneje los gestos
               backgroundColor: AppColors.blanco.solid,
               elevation: 0,
               shape: CircleBorder(

@@ -27,6 +27,10 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+/ios/
+/macos/
+/windows/
+/linux/
 /coverage/
 
 # Symbolication related

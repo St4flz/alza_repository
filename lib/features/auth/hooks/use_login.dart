@@ -7,7 +7,6 @@ class AuthFormResult {
   final String nextEmail;
   final String systemMessage;
   final bool shouldClearInput;
-  final bool shouldRedirect;
   final bool emailExists;
 
   AuthFormResult({
@@ -15,7 +14,6 @@ class AuthFormResult {
     required this.nextEmail,
     required this.systemMessage,
     required this.shouldClearInput,
-    required this.shouldRedirect,
     required this.emailExists,
   });
 }
@@ -66,7 +64,6 @@ class AuthHooks {
           nextEmail: currentEmail,
           systemMessage: "Correo inválido",
           shouldClearInput: false,
-          shouldRedirect: false,
           emailExists: false,
         );
       }
@@ -79,7 +76,6 @@ class AuthHooks {
           nextEmail: text,
           systemMessage: "Inicio de sesión detectado",
           shouldClearInput: true,
-          shouldRedirect: false,
           emailExists: true,
         );
       } else {
@@ -88,7 +84,6 @@ class AuthHooks {
           nextEmail: text,
           systemMessage: "Registro detectado",
           shouldClearInput: true,
-          shouldRedirect: false,
           emailExists: false,
         );
       }
@@ -102,7 +97,6 @@ class AuthHooks {
             nextEmail: currentEmail,
             systemMessage: "Inicio exitoso",
             shouldClearInput: false,
-            shouldRedirect: true,
             emailExists: true,
           );
         } else {
@@ -112,7 +106,6 @@ class AuthHooks {
             nextEmail: currentEmail,
             systemMessage: translateAuthError(errorMsg, emailExists: true),
             shouldClearInput: false,
-            shouldRedirect: false,
             emailExists: true,
           );
         }
@@ -125,7 +118,6 @@ class AuthHooks {
             nextEmail: '',
             systemMessage: "Registro exitoso. Revisa tu correo.",
             shouldClearInput: true,
-            shouldRedirect: false,
             emailExists: false,
           );
         } else {
@@ -135,7 +127,6 @@ class AuthHooks {
             nextEmail: currentEmail,
             systemMessage: translateAuthError(errorMsg, emailExists: false),
             shouldClearInput: false,
-            shouldRedirect: false,
             emailExists: false,
           );
         }
@@ -143,3 +134,4 @@ class AuthHooks {
     }
   }
 }
+
