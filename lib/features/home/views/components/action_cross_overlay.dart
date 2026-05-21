@@ -15,6 +15,14 @@ class ActionCrossOverlay extends StatefulWidget {
   final CrossMenuItem? bottomAction;
   final CrossMenuItem? leftAction;
   final CrossMenuItem? rightAction;
+  final CrossMenuItem? topLeftAction;
+  final CrossMenuItem? topRightAction;
+  final CrossMenuItem? bottomLeftAction;
+  final CrossMenuItem? bottomRightAction;
+  final CrossMenuItem? leftTopAction;
+  final CrossMenuItem? leftBottomAction;
+  final CrossMenuItem? rightTopAction;
+  final CrossMenuItem? rightBottomAction;
   final Widget child;
 
   const ActionCrossOverlay({
@@ -25,6 +33,14 @@ class ActionCrossOverlay extends StatefulWidget {
     this.bottomAction,
     this.leftAction,
     this.rightAction,
+    this.topLeftAction,
+    this.topRightAction,
+    this.bottomLeftAction,
+    this.bottomRightAction,
+    this.leftTopAction,
+    this.leftBottomAction,
+    this.rightTopAction,
+    this.rightBottomAction,
   });
 
   @override
@@ -34,7 +50,8 @@ class ActionCrossOverlay extends StatefulWidget {
 class _ActionCrossOverlayState extends State<ActionCrossOverlay> {
   OverlayEntry? _overlayEntry;
   Offset _dragOffset = Offset.zero;
-  String _selectedDirection = '';
+  String _activeSpace = '';
+  String _selectedActionKey = '';
 
   @override
   void dispose() {
@@ -49,7 +66,8 @@ class _ActionCrossOverlayState extends State<ActionCrossOverlay> {
 
   void _handleLongPressStart(LongPressStartDetails details) {
     _dragOffset = Offset.zero;
-    _selectedDirection = '';
+    _activeSpace = '';
+    _selectedActionKey = '';
     _overlayEntry = _createOverlayEntry();
     Overlay.of(context).insert(_overlayEntry!);
   }
@@ -61,36 +79,108 @@ class _ActionCrossOverlayState extends State<ActionCrossOverlay> {
   }
 
   void _updateSelectedDirection() {
-    if (_dragOffset.distance < 40) {
-      _selectedDirection = '';
+    final distance = _dragOffset.distance;
+    if (distance < 40) {
+      _activeSpace = '';
+      _selectedActionKey = '';
       return;
     }
 
     final dx = _dragOffset.dx;
     final dy = _dragOffset.dy;
 
-    if (dx.abs() > dy.abs()) {
-      _selectedDirection = dx > 0 ? 'right' : 'left';
-    } else {
-      _selectedDirection = dy > 0 ? 'bottom' : 'top';
+    if (_activeSpace.isEmpty) {
+      if (dx.abs() > dy.abs()) {
+        _activeSpace = dx > 0 ? 'right' : 'left';
+      } else {
+        _activeSpace = dy > 0 ? 'bottom' : 'top';
+      }
+    }
+
+    if (_activeSpace == 'top') {
+      final ratio = dx / dy.abs();
+      if (ratio < -0.4 && widget.topLeftAction != null) {
+        _selectedActionKey = 'topLeft';
+      } else if (ratio > 0.4 && widget.topRightAction != null) {
+        _selectedActionKey = 'topRight';
+      } else {
+        _selectedActionKey = 'top';
+      }
+    } else if (_activeSpace == 'bottom') {
+      final ratio = dx / dy.abs();
+      if (ratio < -0.4 && widget.bottomLeftAction != null) {
+        _selectedActionKey = 'bottomLeft';
+      } else if (ratio > 0.4 && widget.bottomRightAction != null) {
+        _selectedActionKey = 'bottomRight';
+      } else {
+        _selectedActionKey = 'bottom';
+      }
+    } else if (_activeSpace == 'left') {
+      final ratio = dy / dx.abs();
+      if (ratio < -0.4 && widget.leftTopAction != null) {
+        _selectedActionKey = 'leftTop';
+      } else if (ratio > 0.4 && widget.leftBottomAction != null) {
+        _selectedActionKey = 'leftBottom';
+      } else {
+        _selectedActionKey = 'left';
+      }
+    } else if (_activeSpace == 'right') {
+      final ratio = dy / dx.abs();
+      if (ratio < -0.4 && widget.rightTopAction != null) {
+        _selectedActionKey = 'rightTop';
+      } else if (ratio > 0.4 && widget.rightBottomAction != null) {
+        _selectedActionKey = 'rightBottom';
+      } else {
+        _selectedActionKey = 'right';
+      }
     }
   }
 
   void _handleLongPressEnd(LongPressEndDetails details) {
     _removeOverlay();
 
-    if (_selectedDirection == 'top' && widget.topAction != null) {
-      widget.topAction!.onTap();
-    } else if (_selectedDirection == 'bottom' && widget.bottomAction != null) {
-      widget.bottomAction!.onTap();
-    } else if (_selectedDirection == 'left' && widget.leftAction != null) {
-      widget.leftAction!.onTap();
-    } else if (_selectedDirection == 'right' && widget.rightAction != null) {
-      widget.rightAction!.onTap();
+    switch (_selectedActionKey) {
+      case 'top':
+        widget.topAction?.onTap();
+        break;
+      case 'topLeft':
+        widget.topLeftAction?.onTap();
+        break;
+      case 'topRight':
+        widget.topRightAction?.onTap();
+        break;
+      case 'bottom':
+        widget.bottomAction?.onTap();
+        break;
+      case 'bottomLeft':
+        widget.bottomLeftAction?.onTap();
+        break;
+      case 'bottomRight':
+        widget.bottomRightAction?.onTap();
+        break;
+      case 'left':
+        widget.leftAction?.onTap();
+        break;
+      case 'leftTop':
+        widget.leftTopAction?.onTap();
+        break;
+      case 'leftBottom':
+        widget.leftBottomAction?.onTap();
+        break;
+      case 'right':
+        widget.rightAction?.onTap();
+        break;
+      case 'rightTop':
+        widget.rightTopAction?.onTap();
+        break;
+      case 'rightBottom':
+        widget.rightBottomAction?.onTap();
+        break;
     }
 
     _dragOffset = Offset.zero;
-    _selectedDirection = '';
+    _activeSpace = '';
+    _selectedActionKey = '';
   }
 
   OverlayEntry _createOverlayEntry() {
@@ -137,38 +227,114 @@ class _ActionCrossOverlayState extends State<ActionCrossOverlay> {
                         ),
 
                         // Icons only for the selected direction
-                        if (_selectedDirection == 'top' && widget.topAction != null)
+                        if (_activeSpace == 'top' && widget.topAction != null) ...[
                           Positioned(
                             top: 20,
                             child: _buildIcon(
                               widget.topAction!.icon,
-                              true,
+                              _selectedActionKey == 'top',
                             ),
                           ),
-                        if (_selectedDirection == 'bottom' && widget.bottomAction != null)
+                          if (widget.topLeftAction != null)
+                            Positioned(
+                              top: 20,
+                              left: 70,
+                              child: _buildIcon(
+                                widget.topLeftAction!.icon,
+                                _selectedActionKey == 'topLeft',
+                              ),
+                            ),
+                          if (widget.topRightAction != null)
+                            Positioned(
+                              top: 20,
+                              right: 70,
+                              child: _buildIcon(
+                                widget.topRightAction!.icon,
+                                _selectedActionKey == 'topRight',
+                              ),
+                            ),
+                        ],
+                        if (_activeSpace == 'bottom' && widget.bottomAction != null) ...[
                           Positioned(
                             bottom: 20,
                             child: _buildIcon(
                               widget.bottomAction!.icon,
-                              true,
+                              _selectedActionKey == 'bottom',
                             ),
                           ),
-                        if (_selectedDirection == 'left' && widget.leftAction != null)
+                          if (widget.bottomLeftAction != null)
+                            Positioned(
+                              bottom: 20,
+                              left: 70,
+                              child: _buildIcon(
+                                widget.bottomLeftAction!.icon,
+                                _selectedActionKey == 'bottomLeft',
+                              ),
+                            ),
+                          if (widget.bottomRightAction != null)
+                            Positioned(
+                              bottom: 20,
+                              right: 70,
+                              child: _buildIcon(
+                                widget.bottomRightAction!.icon,
+                                _selectedActionKey == 'bottomRight',
+                              ),
+                            ),
+                        ],
+                        if (_activeSpace == 'left' && widget.leftAction != null) ...[
                           Positioned(
                             left: 30,
                             child: _buildIcon(
                               widget.leftAction!.icon,
-                              true,
+                              _selectedActionKey == 'left',
                             ),
                           ),
-                        if (_selectedDirection == 'right' && widget.rightAction != null)
+                          if (widget.leftTopAction != null)
+                            Positioned(
+                              top: 20,
+                              left: 30,
+                              child: _buildIcon(
+                                widget.leftTopAction!.icon,
+                                _selectedActionKey == 'leftTop',
+                              ),
+                            ),
+                          if (widget.leftBottomAction != null)
+                            Positioned(
+                              bottom: 20,
+                              left: 30,
+                              child: _buildIcon(
+                                widget.leftBottomAction!.icon,
+                                _selectedActionKey == 'leftBottom',
+                              ),
+                            ),
+                        ],
+                        if (_activeSpace == 'right' && widget.rightAction != null) ...[
                           Positioned(
                             right: 30,
                             child: _buildIcon(
                               widget.rightAction!.icon,
-                              true,
+                              _selectedActionKey == 'right',
                             ),
                           ),
+                          if (widget.rightTopAction != null)
+                            Positioned(
+                              top: 20,
+                              right: 30,
+                              child: _buildIcon(
+                                widget.rightTopAction!.icon,
+                                _selectedActionKey == 'rightTop',
+                              ),
+                            ),
+                          if (widget.rightBottomAction != null)
+                            Positioned(
+                              bottom: 20,
+                              right: 30,
+                              child: _buildIcon(
+                                widget.rightBottomAction!.icon,
+                                _selectedActionKey == 'rightBottom',
+                              ),
+                            ),
+                        ],
 
                         // Fake center button to match overlay visually
                         Positioned(
