@@ -62,14 +62,10 @@ class WalletsService {
     required IconData icon,
     required Color color,
   }) async {
-    final tempWallet = Wallet(
-      id: '',
-      name: name,
-      balance: balance,
-      icon: icon,
-      color: color,
-    );
-    final payload = tempWallet.toJson()..remove('id'); // El backend genera el ID
+    final payload = {
+      'name': name,
+      'balance': balance,
+    };
 
     final response = await _apiService.createWallet(payload);
     if (response.success && response.data != null) {
@@ -103,16 +99,6 @@ class WalletsService {
     final Map<String, dynamic> payload = {};
     if (name != null) payload['name'] = name;
     if (balance != null) payload['balance'] = balance;
-    
-    // Convertimos temporalmente icon y color a strings usando el helper del modelo
-    if (icon != null) {
-      final temp = Wallet(id: '', name: '', balance: 0, icon: icon, color: Colors.white);
-      payload['icon'] = temp.toJson()['icon'];
-    }
-    if (color != null) {
-      final temp = Wallet(id: '', name: '', balance: 0, icon: Icons.clear, color: color);
-      payload['color'] = temp.toJson()['color'];
-    }
 
     final response = await _apiService.updateWallet(walletId, payload);
     if (response.success && response.data != null) {
