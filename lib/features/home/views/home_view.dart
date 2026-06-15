@@ -27,10 +27,10 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndPromptUsername();
-      _checkAndSetupWallets();
-      _loadMovements();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _checkAndPromptUsername();
+      await _checkAndSetupWallets();
+      await _loadMovements();
     });
   }
 

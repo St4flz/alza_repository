@@ -42,17 +42,21 @@ class _WalletsViewState extends State<WalletsView> {
       
       if (widget.forceInitialBalance) {
         debugPrint('[WALLETS VIEW] forceInitialBalance detectado. Buscando billetera "Efectivo"...');
-        final efectivoWallet = walletsProvider.wallets.firstWhere(
-          (w) => w.name == 'Efectivo',
-          orElse: () => walletsProvider.wallets.first,
-        );
-        
-        // Auto-select the Efectivo wallet in UI
-        _onWalletTapped(efectivoWallet);
-        
-        // Show the balance setup dialog
-        if (mounted) {
-          _showInitialBalanceDialog(efectivoWallet);
+        if (walletsProvider.wallets.isNotEmpty) {
+          final efectivoWallet = walletsProvider.wallets.firstWhere(
+            (w) => w.name == 'Efectivo',
+            orElse: () => walletsProvider.wallets.first,
+          );
+          
+          // Auto-select the Efectivo wallet in UI
+          _onWalletTapped(efectivoWallet);
+          
+          // Show the balance setup dialog
+          if (mounted) {
+            _showInitialBalanceDialog(efectivoWallet);
+          }
+        } else {
+          debugPrint('[WALLETS VIEW] No hay billeteras disponibles para configurar.');
         }
       }
     });

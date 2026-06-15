@@ -36,8 +36,8 @@ class Wallet {
       id: json['id']?.toString() ?? '',
       name: json['name']?.toString() ?? '',
       balance: (json['balance'] as num?)?.toDouble() ?? 0.0,
-      icon: _parseIcon(json['icon']?.toString()),
-      color: _parseColor(json['color']?.toString()),
+      icon: parseIcon(json['icon']?.toString()),
+      color: parseColor(json['color']?.toString()),
     );
   }
 
@@ -46,8 +46,8 @@ class Wallet {
       'id': id,
       'name': name,
       'balance': balance,
-      'icon': _iconToString(icon),
-      'color': _colorToHex(color),
+      'icon': iconToString(icon),
+      'color': colorToHex(color),
     };
   }
 
@@ -63,12 +63,12 @@ class Wallet {
     'storefront_rounded': Icons.storefront_rounded,
   };
 
-  static IconData _parseIcon(String? iconStr) {
+  static IconData parseIcon(String? iconStr) {
     if (iconStr == null) return Icons.account_balance_wallet_outlined;
     return _iconMap[iconStr] ?? Icons.account_balance_wallet_outlined;
   }
 
-  static String _iconToString(IconData icon) {
+  static String iconToString(IconData icon) {
     for (var entry in _iconMap.entries) {
       if (entry.value.codePoint == icon.codePoint) {
         return entry.key;
@@ -77,7 +77,7 @@ class Wallet {
     return 'account_balance_wallet_outlined';
   }
 
-  static Color _parseColor(String? colorStr) {
+  static Color parseColor(String? colorStr) {
     if (colorStr == null || colorStr.isEmpty) return const Color(0xFF00D764);
     try {
       final cleanHex = colorStr.replaceAll('#', '');
@@ -90,7 +90,7 @@ class Wallet {
     }
   }
 
-  static String _colorToHex(Color color) {
-    return '#${color.value.toRadixString(16).padLeft(8, '0').substring(2)}';
+  static String colorToHex(Color color) {
+    return '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}';
   }
 }

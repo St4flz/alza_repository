@@ -66,6 +66,8 @@ class WalletsService {
     final payload = {
       'name': name,
       'balance': balance,
+      'icon': Wallet.iconToString(icon),
+      'color': Wallet.colorToHex(color),
     };
 
     final response = await _apiService.createWallet(payload);
@@ -100,6 +102,8 @@ class WalletsService {
     final Map<String, dynamic> payload = {};
     if (name != null) payload['name'] = name;
     if (balance != null) payload['balance'] = balance;
+    if (icon != null) payload['icon'] = Wallet.iconToString(icon);
+    if (color != null) payload['color'] = Wallet.colorToHex(color);
 
     final response = await _apiService.updateWallet(walletId, payload);
     if (response.success && response.data != null) {
