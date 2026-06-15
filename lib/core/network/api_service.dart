@@ -98,20 +98,64 @@ class ApiService {
     );
   }
 
-  /// Endpoint de ejemplo para registrar un nuevo movimiento financiero.
-  Future<ApiResponse<Map<String, dynamic>>> createMovement(Map<String, dynamic> data) async {
+  /// Obtiene el listado de categorías del usuario.
+  Future<ApiResponse<List<dynamic>>> getCategories() async {
+    return _request<List<dynamic>>(
+      method: 'GET',
+      path: '/categories',
+    );
+  }
+
+  /// Crea una nueva categoría.
+  Future<ApiResponse<Map<String, dynamic>>> createCategory(Map<String, dynamic> data) async {
     return _request<Map<String, dynamic>>(
       method: 'POST',
-      path: '/movements',
+      path: '/categories',
       data: data,
     );
   }
 
-  /// Endpoint de ejemplo para obtener el historial de últimos movimientos.
-  Future<ApiResponse<List<dynamic>>> getMovements() async {
+  /// Obtiene el listado de etiquetas (tags) del usuario.
+  Future<ApiResponse<List<dynamic>>> getTags() async {
     return _request<List<dynamic>>(
       method: 'GET',
-      path: '/movements',
+      path: '/tags',
+    );
+  }
+
+  /// Crea una nueva etiqueta.
+  Future<ApiResponse<Map<String, dynamic>>> createTag(Map<String, dynamic> data) async {
+    return _request<Map<String, dynamic>>(
+      method: 'POST',
+      path: '/tags',
+      data: data,
+    );
+  }
+
+  /// Obtiene el listado de movimientos/transacciones.
+  Future<ApiResponse<List<dynamic>>> getTransactions({Map<String, dynamic>? queryParameters}) async {
+    return _request<List<dynamic>>(
+      method: 'GET',
+      path: '/transactions',
+      queryParameters: queryParameters,
+    );
+  }
+
+  /// Crea un nuevo movimiento/transacción.
+  Future<ApiResponse<Map<String, dynamic>>> createTransaction(Map<String, dynamic> data) async {
+    return _request<Map<String, dynamic>>(
+      method: 'POST',
+      path: '/transactions',
+      data: data,
+    );
+  }
+
+  /// Obtiene el conteo de movimientos para una billetera en particular.
+  Future<ApiResponse<Map<String, dynamic>>> getTransactionCount(String walletId) async {
+    return _request<Map<String, dynamic>>(
+      method: 'GET',
+      path: '/transactions/count',
+      queryParameters: {'wallet_id': walletId},
     );
   }
 

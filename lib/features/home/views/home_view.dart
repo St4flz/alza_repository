@@ -4,12 +4,14 @@ import 'package:alza/features/auth/providers/auth_provider.dart';
 import 'package:alza/features/home/providers/home_provider.dart';
 import 'package:alza/features/home/models/cross_menu_item.dart';
 import 'package:alza/app/style/app_colors.dart';
+import 'package:alza/app/style/app_fonts.dart';
 import 'package:alza/shared/components/bg/bg.dart';
 import 'package:alza/features/home/views/components/header_section.dart';
 import 'package:alza/features/home/views/components/total_card.dart';
 import 'package:alza/features/home/views/components/section_title.dart';
 import 'package:alza/features/home/views/components/wallet_item.dart';
-import 'package:alza/features/home/views/components/movement_item_placeholder.dart';
+import 'package:alza/features/movements/providers/movements_provider.dart';
+import 'package:alza/features/movements/views/components/movement_item.dart';
 import 'package:alza/features/home/views/components/custom_bottom_nav.dart';
 import 'package:alza/features/home/views/components/action_cross_overlay.dart';
 import 'package:alza/features/home/views/components/username_modal.dart';
@@ -30,7 +32,15 @@ class _HomeViewState extends State<HomeView> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _checkAndPromptUsername();
       await _checkAndSetupWallets();
+      await _loadMovements();
     });
+  }
+
+  Future<void> _loadMovements() async {
+    if (!mounted) return;
+    final movementsProvider = Provider.of<MovementsProvider>(context, listen: false);
+    debugPrint('[HOME VIEW] Cargando movimientos reales...');
+    await movementsProvider.fetchMovements();
   }
 
   Future<void> _checkAndPromptUsername() async {
@@ -100,6 +110,7 @@ class _HomeViewState extends State<HomeView> {
     final authProvider = Provider.of<AuthProvider>(context);
     final homeProvider = Provider.of<HomeProvider>(context);
     final walletsProvider = Provider.of<WalletsProvider>(context);
+    final movementsProvider = Provider.of<MovementsProvider>(context);
     final user = authProvider.currentUser;
 
     // Sincronizar las billeteras reales en tiempo real
@@ -161,12 +172,37 @@ class _HomeViewState extends State<HomeView> {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  const SectionTitle(title: 'Ultimos movimientos'),
-                  const SizedBox(height: 16),
-                  ...List.generate(
-                    homeProvider.movementsCount,
-                    (_) => const MovementItemPlaceholder(),
+                  GestureDetector(
+                    onTap: () => context.push('/add-movement'),
+                    behavior: HitTestBehavior.opaque,
+                    child: const SectionTitle(title: 'Últimos movimientos'),
                   ),
+                  const SizedBox(height: 16),
+                  if (movementsProvider.isLoading && movementsProvider.movements.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20.0),
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00D764)),
+                        ),
+                      ),
+                    )
+                  else if (movementsProvider.movements.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24.0),
+                      child: Text(
+                        'No tienes movimientos registrados.',
+                        style: AppFonts.montserrat(
+                          fontSize: 14,
+                          color: AppColors.negro.solid.withOpacity(0.5),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  else
+                    ...movementsProvider.movements.take(10).map((movement) {
+                      return MovementItem(movement: movement);
+                    }).toList(),
                   const SizedBox(height: 100),
                 ],
               ),
@@ -175,7 +211,7 @@ class _HomeViewState extends State<HomeView> {
         ),
         floatingActionButton: ActionCrossOverlay(
           onDefaultTap: () {
-            print("Navegar a vista por defecto");
+            context.push('/add-movement');
           },
           topAction: CrossMenuItem(
             icon: Icons.add,
