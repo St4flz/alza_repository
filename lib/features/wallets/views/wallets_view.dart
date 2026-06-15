@@ -4,14 +4,15 @@ import 'package:alza/app/style/app_colors.dart';
 import 'package:alza/app/style/app_fonts.dart';
 import 'package:alza/shared/components/bg/bg.dart';
 import 'package:alza/features/wallets/models/wallet_model.dart';
-import 'package:alza/features/wallets/models/transfer_model.dart';
 import 'package:alza/features/wallets/providers/wallets_provider.dart';
-import 'package:alza/features/home/views/components/wallet_list_item.dart';
-import 'package:alza/features/home/views/components/percentage_bar.dart';
-import 'package:alza/features/home/views/components/wallet_edit_sheet.dart';
+import 'package:alza/features/wallets/views/components/wallet_list_item.dart';
+import 'package:alza/features/wallets/views/components/percentage_bar.dart';
+import 'package:alza/features/wallets/views/components/wallet_edit_sheet.dart';
+import 'package:alza/features/wallets/views/components/initial_balance_dialog.dart';
+import 'package:alza/features/wallets/views/components/add_wallet_dialog.dart';
+import 'package:alza/features/wallets/views/components/transfer_selector_bottom_sheet.dart';
 import 'package:alza/features/home/views/components/custom_bottom_nav.dart';
 import 'package:alza/shared/components/ui/button.dart';
-import 'package:alza/shared/components/ui/text_box.dart';
 
 class WalletsView extends StatefulWidget {
   final bool forceInitialBalance;
@@ -58,160 +59,10 @@ class _WalletsViewState extends State<WalletsView> {
   }
 
   void _showInitialBalanceDialog(Wallet wallet) {
-    final TextEditingController balanceCtrl = TextEditingController(text: '0');
-    bool isLoading = false;
-    String? errorMessage;
-
     showDialog(
       context: context,
-      barrierDismissible: false, // Obligatorio: no se puede descartar tocando fuera
-      builder: (context) {
-        return PopScope(
-          canPop: false, // Obligatorio: no se puede retroceder con el botón atrás del sistema
-          child: StatefulBuilder(
-            builder: (context, setDialogState) {
-              return AlertDialog(
-                backgroundColor: AppColors.negro.solid,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide(color: AppColors.verde.solid.withOpacity(0.5), width: 1.5),
-                ),
-                title: Column(
-                  children: [
-                    Icon(
-                      Icons.account_balance_wallet_outlined,
-                      color: AppColors.verde.solid,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Configura tu Billetera',
-                      style: AppFonts.montserrat(
-                        color: AppColors.verde.solid,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Las billeteras representan tus diferentes fuentes de dinero (efectivo, bancos, tarjetas, etc.).',
-                      style: AppFonts.montserrat(
-                        color: AppColors.blanco.solid.withOpacity(0.9),
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Hemos creado una billetera por defecto llamada "${wallet.name}". Por favor, confirma o ingresa su saldo inicial:',
-                      style: AppFonts.montserrat(
-                        color: AppColors.blanco.solid.withOpacity(0.7),
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    CajaTexto(
-                      hintText: 'Ej. 50000',
-                      controller: balanceCtrl,
-                      backgroundColor: AppColors.blanco.withOpacity(0.1),
-                      hintStyle: AppFonts.montserrat(
-                        fontSize: 14,
-                        color: AppColors.blanco.withOpacity(0.4),
-                      ),
-                      textStyle: AppFonts.montserrat(
-                        fontSize: 16,
-                        color: AppColors.blanco.solid,
-                      ),
-                    ),
-                    if (errorMessage != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        errorMessage!,
-                        style: AppFonts.montserrat(
-                          color: Colors.redAccent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ]
-                  ],
-                ),
-                actionsAlignment: MainAxisAlignment.center,
-                actions: [
-                  isLoading
-                      ? const Padding(
-                          padding: EdgeInsets.only(bottom: 12.0),
-                          child: CircularProgressIndicator(color: Colors.green),
-                        )
-                      : Boton(
-                          text: 'Confirmar Saldo',
-                          backgroundColor: AppColors.verde.solid,
-                          textStyle: AppFonts.montserrat(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.blanco.solid,
-                          ),
-                          onPressed: () async {
-                            final balanceStr = balanceCtrl.text.trim();
-                            final balance = double.tryParse(balanceStr);
-                            if (balance == null) {
-                              setDialogState(() {
-                                errorMessage = 'Por favor ingresa un número válido';
-                              });
-                              return;
-                            }
-                            
-                            setDialogState(() {
-                              isLoading = true;
-                              errorMessage = null;
-                            });
-                            
-                            final provider = Provider.of<WalletsProvider>(context, listen: false);
-                            debugPrint('[WALLETS VIEW] Actualizando saldo de billetera default a: $balance');
-                            final success = await provider.updateWallet(
-                              wallet.id,
-                              name: wallet.name,
-                              balance: balance,
-                              icon: wallet.icon,
-                              color: wallet.color,
-                            );
-                            
-                            if (success) {
-                              debugPrint('[WALLETS VIEW] Saldo inicial confirmado con éxito.');
-                              if (mounted) {
-                                Navigator.pop(context);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('¡Saldo inicial confirmado con éxito!'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              }
-                            } else {
-                              debugPrint('[WALLETS VIEW] ERROR al actualizar el saldo: ${provider.errorMessage}');
-                              setDialogState(() {
-                                isLoading = false;
-                                errorMessage = provider.errorMessage ?? 'Error al guardar el saldo';
-                              });
-                            }
-                          },
-                          width: double.infinity,
-                          height: 48,
-                        ),
-                ],
-              );
-            },
-          ),
-        );
-      },
+      barrierDismissible: false,
+      builder: (context) => InitialBalanceDialog(wallet: wallet),
     );
   }
 
@@ -266,6 +117,8 @@ class _WalletsViewState extends State<WalletsView> {
       color: _selectedWallet!.color,
     );
 
+    if (!mounted) return;
+
     if (success) {
       setState(() {
         _selectedWallet = null;
@@ -293,6 +146,8 @@ class _WalletsViewState extends State<WalletsView> {
   Future<void> _deleteWallet(Wallet wallet) async {
     final provider = Provider.of<WalletsProvider>(context, listen: false);
     final success = await provider.deleteWallet(wallet.id);
+
+    if (!mounted) return;
 
     if (success) {
       setState(() {
@@ -351,155 +206,9 @@ class _WalletsViewState extends State<WalletsView> {
   }
 
   void _openAddWalletDialog() {
-    final nameCtrl = TextEditingController();
-    final balanceCtrl = TextEditingController();
-    IconData selectedIcon = Icons.account_balance_wallet_outlined;
-    Color selectedColor = AppColors.verde.solid;
-
     showDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: AppColors.blanco.solid,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(28),
-              ),
-              title: Text(
-                'Nueva Billetera',
-                style: AppFonts.montserrat(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: AppColors.negro.solid,
-                ),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre de la billetera',
-                      hintText: 'Ej. Ahorros',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: balanceCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Saldo inicial',
-                      hintText: 'Ej. 200000',
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Ícono y Color:',
-                        style: AppFonts.montserrat(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.transparent,
-                            builder: (ctx) {
-                              return WalletEditSheet(
-                                initialIcon: selectedIcon,
-                                initialColor: selectedColor,
-                                onSelected: (newIcon, newColor) {
-                                  setDialogState(() {
-                                    selectedIcon = newIcon;
-                                    selectedColor = newColor;
-                                  });
-                                },
-                              );
-                            },
-                          );
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: selectedColor.withOpacity(0.15),
-                            border: Border.all(color: selectedColor, width: 2),
-                          ),
-                          child: Icon(
-                            selectedIcon,
-                            color: selectedColor,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Cancelar',
-                    style: TextStyle(color: Colors.red[400]),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    final name = nameCtrl.text.trim();
-                    final balanceStr = balanceCtrl.text.trim();
-                    if (name.isEmpty) return;
-
-                    final balance = double.tryParse(balanceStr) ?? 0.0;
-
-                    final provider = Provider.of<WalletsProvider>(context, listen: false);
-                    Navigator.pop(context);
-
-                    final success = await provider.createWallet(
-                      name: name,
-                      balance: balance,
-                      icon: selectedIcon,
-                      color: selectedColor,
-                    );
-
-                    if (!success) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(provider.errorMessage ?? 'Error al crear la billetera.'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Billetera creada con éxito.'),
-                          backgroundColor: Colors.green,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.negro.solid,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                  child: Text(
-                    'Crear',
-                    style: TextStyle(color: AppColors.blanco.solid),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (context) => const AddWalletDialog(),
     );
   }
 
@@ -524,9 +233,9 @@ class _WalletsViewState extends State<WalletsView> {
         height: 36,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.verde.solid.withOpacity(0.12),
+          color: AppColors.verde.withOpacity(0.12),
           border: Border.all(
-            color: AppColors.verde.solid.withOpacity(0.4),
+            color: AppColors.verde.withOpacity(0.4),
             width: 1.5,
           ),
         ),
@@ -562,14 +271,14 @@ class _WalletsViewState extends State<WalletsView> {
                       style: AppFonts.montserrat(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.negro.solid.withOpacity(0.6),
+                        color: AppColors.negro.withOpacity(0.6),
                       ),
                       decoration: InputDecoration(
                         hintText: label,
                         hintStyle: AppFonts.montserrat(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.negro.solid.withOpacity(0.35),
+                          color: AppColors.negro.withOpacity(0.35),
                         ),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.zero,
@@ -580,7 +289,7 @@ class _WalletsViewState extends State<WalletsView> {
                       style: AppFonts.montserrat(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.negro.solid.withOpacity(0.35),
+                        color: AppColors.negro.withOpacity(0.35),
                       ),
                     ),
             ),
@@ -592,91 +301,22 @@ class _WalletsViewState extends State<WalletsView> {
   }
 
   void _selectWalletForTransfer({required bool isOrigin}) {
-    final provider = Provider.of<WalletsProvider>(context, listen: false);
-    final list = provider.wallets.where((w) {
-      if (isOrigin) {
-        return _transferDestWallet == null || w.id != _transferDestWallet!.id;
-      } else {
-        return _transferOriginWallet == null || w.id != _transferOriginWallet!.id;
-      }
-    }).toList();
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.blanco.solid,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(28),
-              topRight: Radius.circular(28),
-            ),
-          ),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                isOrigin ? 'Selecciona Billetera Origen' : 'Selecciona Billetera Destino',
-                style: AppFonts.montserrat(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: AppColors.negro.solid,
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (list.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    'No hay billeteras disponibles.',
-                    style: AppFonts.montserrat(color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
-                )
-              else
-                Flexible(
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: list.length,
-                    itemBuilder: (context, index) {
-                      final wallet = list[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: wallet.color.withOpacity(0.12),
-                          child: Icon(wallet.icon, color: wallet.color),
-                        ),
-                        title: Text(
-                          wallet.name,
-                          style: AppFonts.montserrat(
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.negro.solid,
-                          ),
-                        ),
-                        subtitle: Text(
-                          _formatCurrency(wallet.balance),
-                          style: AppFonts.montserrat(
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        onTap: () {
-                          setState(() {
-                            if (isOrigin) {
-                              _transferOriginWallet = wallet;
-                            } else {
-                              _transferDestWallet = wallet;
-                            }
-                          });
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
+        return TransferSelectorBottomSheet(
+          isOrigin: isOrigin,
+          otherSelectedWallet: isOrigin ? _transferDestWallet : _transferOriginWallet,
+          onSelected: (wallet) {
+            setState(() {
+              if (isOrigin) {
+                _transferOriginWallet = wallet;
+              } else {
+                _transferDestWallet = wallet;
+              }
+            });
+          },
         );
       },
     );
@@ -718,6 +358,8 @@ class _WalletsViewState extends State<WalletsView> {
       destWalletId: _transferDestWallet!.id,
       amount: amount,
     );
+
+    if (!mounted) return;
 
     if (success) {
       setState(() {
@@ -787,7 +429,7 @@ class _WalletsViewState extends State<WalletsView> {
                             style: AppFonts.montserrat(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.negro.solid.withOpacity(0.4),
+                              color: AppColors.negro.withOpacity(0.4),
                             ),
                           ),
                         ],
@@ -822,7 +464,7 @@ class _WalletsViewState extends State<WalletsView> {
                           'No tienes billeteras registradas.',
                           style: AppFonts.montserrat(
                             fontSize: 16,
-                            color: AppColors.negro.solid.withOpacity(0.5),
+                            color: AppColors.negro.withOpacity(0.5),
                           ),
                         ),
                       ),
@@ -892,7 +534,7 @@ class _WalletsViewState extends State<WalletsView> {
                       keyboardType: TextInputType.number,
                       trailing: Icon(
                         Icons.assignment_outlined,
-                        color: AppColors.negro.solid.withOpacity(0.3),
+                        color: AppColors.negro.withOpacity(0.3),
                         size: 24,
                       ),
                     ),
@@ -900,7 +542,7 @@ class _WalletsViewState extends State<WalletsView> {
                     Boton(
                       text: walletsProvider.isLoading ? 'Transfiriendo...' : 'Transferir',
                       backgroundColor: walletsProvider.isLoading 
-                          ? AppColors.negro.solid.withOpacity(0.3) 
+                          ? AppColors.negro.withOpacity(0.3) 
                           : AppColors.negro.solid,
                       textStyle: AppFonts.montserrat(
                         fontWeight: FontWeight.bold,
@@ -940,7 +582,7 @@ class _WalletsViewState extends State<WalletsView> {
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: _selectedWallet!.color.withOpacity(0.12),
+                                color: _selectedWallet!.color.withValues(alpha: 0.12),
                                 border: Border.all(
                                   color: _selectedWallet!.color,
                                   width: 1.5,

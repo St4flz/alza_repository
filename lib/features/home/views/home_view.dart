@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:alza/features/auth/providers/auth_provider.dart';
 import 'package:alza/features/home/providers/home_provider.dart';
-import 'package:alza/features/home/models/cross_menu_item.dart';
 import 'package:alza/app/style/app_colors.dart';
 import 'package:alza/app/style/app_fonts.dart';
 import 'package:alza/shared/components/bg/bg.dart';
@@ -13,7 +12,6 @@ import 'package:alza/features/home/views/components/wallet_item.dart';
 import 'package:alza/features/movements/providers/movements_provider.dart';
 import 'package:alza/features/movements/views/components/movement_item.dart';
 import 'package:alza/features/home/views/components/custom_bottom_nav.dart';
-import 'package:alza/features/home/views/components/action_cross_overlay.dart';
 import 'package:alza/features/home/views/components/username_modal.dart';
 import 'package:alza/features/wallets/providers/wallets_provider.dart';
 import 'package:go_router/go_router.dart';
@@ -29,10 +27,10 @@ class _HomeViewState extends State<HomeView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _checkAndPromptUsername();
-      await _checkAndSetupWallets();
-      await _loadMovements();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndPromptUsername();
+      _checkAndSetupWallets();
+      _loadMovements();
     });
   }
 
@@ -81,27 +79,11 @@ class _HomeViewState extends State<HomeView> {
   Future<void> _checkAndSetupWallets() async {
     if (!mounted) return;
     final walletsProvider = Provider.of<WalletsProvider>(context, listen: false);
-    debugPrint('[HOME VIEW] Cargando billeteras del backend...');
-    final success = await walletsProvider.fetchWallets();
+    final createdDefault = await walletsProvider.checkAndSetupWallets();
     
-    if (success) {
-      debugPrint('[HOME VIEW] Billeteras reales encontradas: ${walletsProvider.wallets.length}');
-      if (walletsProvider.wallets.isEmpty) {
-        debugPrint('[HOME VIEW] No se encontraron billeteras. Creando "Efectivo" automáticamente...');
-        final createSuccess = await walletsProvider.createWallet(
-          name: 'Efectivo',
-          balance: 0.0,
-          icon: Icons.account_balance_wallet_outlined,
-          color: AppColors.verde.solid,
-        );
-        
-        if (createSuccess && mounted) {
-          debugPrint('[HOME VIEW] Billetera por defecto "Efectivo" creada. Redirigiendo a wallets...');
-          context.push('/wallets?forceInitialBalance=true');
-        }
-      }
-    } else {
-      debugPrint('[HOME VIEW] ERROR al obtener billeteras: ${walletsProvider.errorMessage}');
+    if (createdDefault && mounted) {
+      debugPrint('[HOME VIEW] Redirigiendo a wallets para configurar saldo inicial...');
+      context.push('/wallets?forceInitialBalance=true');
     }
   }
 
@@ -112,13 +94,6 @@ class _HomeViewState extends State<HomeView> {
     final walletsProvider = Provider.of<WalletsProvider>(context);
     final movementsProvider = Provider.of<MovementsProvider>(context);
     final user = authProvider.currentUser;
-
-    // Sincronizar las billeteras reales en tiempo real
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) {
-        homeProvider.setRealWallets(walletsProvider.wallets);
-      }
-    });
 
     return AnimatedBackground(
       child: Scaffold(
@@ -194,7 +169,7 @@ class _HomeViewState extends State<HomeView> {
                         'No tienes movimientos registrados.',
                         style: AppFonts.montserrat(
                           fontSize: 14,
-                          color: AppColors.negro.solid.withOpacity(0.5),
+                          color: AppColors.negro.withOpacity(0.5),
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -202,86 +177,38 @@ class _HomeViewState extends State<HomeView> {
                   else
                     ...movementsProvider.movements.take(10).map((movement) {
                       return MovementItem(movement: movement);
-                    }).toList(),
+                    }),
                   const SizedBox(height: 100),
                 ],
               ),
             ),
           ),
         ),
-        floatingActionButton: ActionCrossOverlay(
-          onDefaultTap: () {
-            context.push('/add-movement');
-          },
-          topAction: CrossMenuItem(
-            icon: Icons.add,
-            onTap: () => print("Acción Arriba"),
+        floatingActionButton: Container(
+          padding: const EdgeInsets.all(4),
+          margin: const EdgeInsets.only(bottom: 70),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: AppColors.blanco.solid,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.negro.withOpacity(0.05),
+                spreadRadius: 8,
+                blurRadius: 10,
+              ),
+            ],
           ),
-          topLeftAction: CrossMenuItem(
-            icon: Icons.local_offer,
-            onTap: () => print("Acción Arriba-Izquierda"),
-          ),
-          topRightAction: CrossMenuItem(
-            icon: Icons.grid_view,
-            onTap: () => print("Acción Arriba-Derecha"),
-          ),
-          bottomAction: CrossMenuItem(
-            icon: Icons.bar_chart,
-            onTap: () => print("Acción Abajo"),
-          ),
-          bottomLeftAction: CrossMenuItem(
-            icon: Icons.local_offer,
-            onTap: () => print("Acción Abajo-Izquierda"),
-          ),
-          bottomRightAction: CrossMenuItem(
-            icon: Icons.grid_view,
-            onTap: () => print("Acción Abajo-Derecha"),
-          ),
-          leftAction: CrossMenuItem(
-            icon: Icons.local_offer,
-            onTap: () => print("Acción Izquierda"),
-          ),
-          leftTopAction: null,
-          leftBottomAction: null,
-          rightAction: CrossMenuItem(
-            icon: Icons.edit_document,
-            onTap: () => print("Acción Derecha"),
-          ),
-          rightTopAction: CrossMenuItem(
-            icon: Icons.mic,
-            onTap: () => print("Acción Derecha-Arriba"),
-          ),
-          rightBottomAction: CrossMenuItem(
-            icon: Icons.camera_alt,
-            onTap: () => print("Acción Derecha-Abajo"),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            margin: const EdgeInsets.only(bottom: 70),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.blanco.solid,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.negro.withOpacity(0.05),
-                  spreadRadius: 8,
-                  blurRadius: 10,
-                ),
-              ],
+          child: FloatingActionButton(
+            onPressed: () => context.push('/add-movement'),
+            backgroundColor: AppColors.blanco.solid,
+            elevation: 0,
+            shape: CircleBorder(
+              side: BorderSide(color: AppColors.verde.solid, width: 2),
             ),
-            child: FloatingActionButton(
-              onPressed:
-                  null, // Dejamos que ActionCrossOverlay maneje los gestos
-              backgroundColor: AppColors.blanco.solid,
-              elevation: 0,
-              shape: CircleBorder(
-                side: BorderSide(color: AppColors.verde.solid, width: 2),
-              ),
-              child: Icon(
-                Icons.playlist_add,
-                color: AppColors.verde.solid,
-                size: 32,
-              ),
+            child: Icon(
+              Icons.playlist_add,
+              color: AppColors.verde.solid,
+              size: 32,
             ),
           ),
         ),

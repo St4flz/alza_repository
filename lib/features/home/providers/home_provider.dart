@@ -1,28 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:alza/features/wallets/models/wallet_model.dart' as model;
+import 'package:alza/features/wallets/providers/wallets_provider.dart';
 
 class HomeProvider extends ChangeNotifier {
-  List<model.Wallet> _realWallets = [];
-  List<model.Wallet> get wallets => _realWallets;
+  WalletsProvider? _walletsProvider;
 
-  void setRealWallets(List<model.Wallet> wallets) {
-    // Avoid redundant calls and rebuild loops
-    bool changed = _realWallets.length != wallets.length;
-    if (!changed) {
-      for (int i = 0; i < wallets.length; i++) {
-        if (_realWallets[i].id != wallets[i].id || 
-            _realWallets[i].balance != wallets[i].balance ||
-            _realWallets[i].name != wallets[i].name) {
-          changed = true;
-          break;
-        }
-      }
-    }
-    if (changed) {
-      debugPrint('[HOME PROVIDER] Sincronizando ${_realWallets.length} -> ${wallets.length} billeteras reales.');
-      _realWallets = List.from(wallets);
-      notifyListeners();
-    }
+  List<model.Wallet> get wallets => _walletsProvider?.wallets ?? [];
+
+  void updateWalletsProvider(WalletsProvider walletsProvider) {
+    _walletsProvider = walletsProvider;
   }
 
   String _selectedWalletId = '';
@@ -34,9 +20,10 @@ class HomeProvider extends ChangeNotifier {
   }
 
   void selectWallet(String walletName) {
-    if (_realWallets.isEmpty) return;
+    final list = wallets;
+    if (list.isEmpty) return;
     try {
-      final wallet = _realWallets.firstWhere((w) => w.name == walletName);
+      final wallet = list.firstWhere((w) => w.name == walletName);
       if (_selectedWalletId == wallet.id) {
         _selectedWalletId = '';
       } else {
@@ -61,7 +48,7 @@ class HomeProvider extends ChangeNotifier {
   model.Wallet? get selectedWallet {
     if (_selectedWalletId.isEmpty) return null;
     try {
-      return _realWallets.firstWhere((w) => w.id == _selectedWalletId);
+      return wallets.firstWhere((w) => w.id == _selectedWalletId);
     } catch (_) {
       return null;
     }
@@ -73,7 +60,7 @@ class HomeProvider extends ChangeNotifier {
       return _formatCurrency(selected.balance);
     }
     // Sum of all wallets
-    final sum = _realWallets.fold<double>(0.0, (prev, element) => prev + element.balance);
+    final sum = wallets.fold<double>(0.0, (prev, element) => prev + element.balance);
     return _formatCurrency(sum);
   }
 

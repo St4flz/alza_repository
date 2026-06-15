@@ -136,10 +136,12 @@ class _AddMovementViewState extends State<AddMovementView> {
                     final newCategory = await movementsProvider.createCategory(name);
 
                     if (newCategory != null) {
-                      setState(() {
-                        _selectedCategory = newCategory;
-                      });
-                      Navigator.pop(context);
+                      if (context.mounted) {
+                        setState(() {
+                          _selectedCategory = newCategory;
+                        });
+                        Navigator.pop(context);
+                      }
                     } else {
                       setDialogState(() {
                         isSaving = false;
@@ -216,12 +218,14 @@ class _AddMovementViewState extends State<AddMovementView> {
                     final newTag = await movementsProvider.createTag(name);
 
                     if (newTag != null) {
-                      setState(() {
-                        if (!_selectedTags.any((t) => t.id == newTag.id)) {
-                          _selectedTags.add(newTag);
-                        }
-                      });
-                      Navigator.pop(context);
+                      if (context.mounted) {
+                        setState(() {
+                          if (!_selectedTags.any((t) => t.id == newTag.id)) {
+                            _selectedTags.add(newTag);
+                          }
+                        });
+                        Navigator.pop(context);
+                      }
                     } else {
                       setDialogState(() {
                         isSaving = false;
@@ -266,6 +270,16 @@ class _AddMovementViewState extends State<AddMovementView> {
       return;
     }
 
+    if (_type == 'expense' && _selectedWallet!.balance < amount) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Saldo insuficiente en la billetera para realizar este gasto.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     final provider = Provider.of<MovementsProvider>(context, listen: false);
     final walletsProvider = Provider.of<WalletsProvider>(context, listen: false);
 
@@ -291,9 +305,11 @@ class _AddMovementViewState extends State<AddMovementView> {
         Navigator.pop(context);
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(provider.errorMessage ?? 'Error al crear el movimiento.'), backgroundColor: Colors.red),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(provider.errorMessage ?? 'Error al crear el movimiento.'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -341,6 +357,7 @@ class _AddMovementViewState extends State<AddMovementView> {
                                 _type = 'expense';
                               });
                               _updateDefaultTitle();
+                              _formKey.currentState?.validate();
                             },
                             child: Container(
                               height: 48,
@@ -368,6 +385,7 @@ class _AddMovementViewState extends State<AddMovementView> {
                                 _type = 'income';
                               });
                               _updateDefaultTitle();
+                              _formKey.currentState?.validate();
                             },
                             child: Container(
                               height: 48,
@@ -392,7 +410,7 @@ class _AddMovementViewState extends State<AddMovementView> {
                     const SizedBox(height: 24),
 
                     // Wallet Selector
-                    Text('Billetera', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.solid.withOpacity(0.5))),
+                    Text('Billetera', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.withOpacity(0.5))),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -417,6 +435,7 @@ class _AddMovementViewState extends State<AddMovementView> {
                               _selectedWallet = val;
                             });
                             _updateDefaultTitle();
+                            _formKey.currentState?.validate();
                           },
                         ),
                       ),
@@ -427,7 +446,7 @@ class _AddMovementViewState extends State<AddMovementView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Categoría', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.solid.withOpacity(0.5))),
+                        Text('Categoría', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.withOpacity(0.5))),
                         GestureDetector(
                           onTap: _showAddCategoryDialog,
                           child: Text('+ Categoría', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.verde.solid)),
@@ -464,7 +483,7 @@ class _AddMovementViewState extends State<AddMovementView> {
                     const SizedBox(height: 20),
 
                     // Amount Field
-                    Text('Monto', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.solid.withOpacity(0.5))),
+                    Text('Monto', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.withOpacity(0.5))),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _amountController,
@@ -479,14 +498,19 @@ class _AddMovementViewState extends State<AddMovementView> {
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) return 'Requerido';
-                        if (double.tryParse(value.trim()) == null) return 'Ingresar número';
+                        final parsed = double.tryParse(value.trim());
+                        if (parsed == null) return 'Ingresar número';
+                        if (parsed <= 0) return 'El monto debe ser mayor a 0';
+                        if (_type == 'expense' && _selectedWallet != null && _selectedWallet!.balance < parsed) {
+                          return 'Saldo insuficiente (${_selectedWallet!.balance.toStringAsFixed(0)} \$)';
+                        }
                         return null;
                       },
                     ),
                     const SizedBox(height: 20),
 
                     // Title Field (Default populated but editable)
-                    Text('Concepto (Título)', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.solid.withOpacity(0.5))),
+                    Text('Concepto (Título)', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.withOpacity(0.5))),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _titleController,
@@ -509,7 +533,7 @@ class _AddMovementViewState extends State<AddMovementView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Etiquetas', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.solid.withOpacity(0.5))),
+                        Text('Etiquetas', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.withOpacity(0.5))),
                         GestureDetector(
                           onTap: _showAddTagDialog,
                           child: Text('+ Etiqueta', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.verde.solid)),
@@ -545,7 +569,7 @@ class _AddMovementViewState extends State<AddMovementView> {
                     const SizedBox(height: 20),
 
                     // Description Field
-                    Text('Descripción (Opcional)', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.solid.withOpacity(0.5))),
+                    Text('Descripción (Opcional)', style: AppFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.negro.withOpacity(0.5))),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _descriptionController,
@@ -565,7 +589,7 @@ class _AddMovementViewState extends State<AddMovementView> {
                     Boton(
                       text: movementsProvider.isLoading ? 'Guardando...' : 'Guardar',
                       backgroundColor: movementsProvider.isLoading 
-                          ? AppColors.negro.solid.withOpacity(0.3) 
+                          ? AppColors.negro.withOpacity(0.3) 
                           : AppColors.negro.solid,
                       textStyle: AppFonts.montserrat(
                         fontWeight: FontWeight.bold,

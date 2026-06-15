@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:alza/features/wallets/models/wallet_model.dart';
 import 'package:alza/features/wallets/models/transfer_model.dart';
 import 'package:alza/features/wallets/services/wallets_service.dart';
+import 'package:alza/app/style/app_colors.dart';
 
 class WalletsProvider extends ChangeNotifier {
   final WalletsService _service = WalletsService();
@@ -43,6 +44,30 @@ class WalletsProvider extends ChangeNotifier {
       _setLoading(false);
       return false;
     }
+  }
+
+  /// Verifica y configura las billeteras iniciales.
+  /// Si la lista está vacía, crea la billetera "Efectivo" automáticamente.
+  /// Retorna true si se creó una nueva billetera por defecto.
+  Future<bool> checkAndSetupWallets() async {
+    debugPrint('[WALLETS PROVIDER] Cargando billeteras del backend...');
+    final success = await fetchWallets();
+    if (success) {
+      debugPrint('[WALLETS PROVIDER] Billeteras reales encontradas: ${_wallets.length}');
+      if (_wallets.isEmpty) {
+        debugPrint('[WALLETS PROVIDER] No se encontraron billeteras. Creando "Efectivo" automáticamente...');
+        final createSuccess = await createWallet(
+          name: 'Efectivo',
+          balance: 0.0,
+          icon: Icons.account_balance_wallet_outlined,
+          color: AppColors.verde.solid,
+        );
+        return createSuccess;
+      }
+    } else {
+      debugPrint('[WALLETS PROVIDER] ERROR al obtener billeteras: $errorMessage');
+    }
+    return false;
   }
 
   /// Crea una billetera en el backend e incrementa el listado local.

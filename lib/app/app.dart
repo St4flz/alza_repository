@@ -14,8 +14,12 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => WalletsProvider()),
+        ChangeNotifierProxyProvider<WalletsProvider, HomeProvider>(
+          create: (_) => HomeProvider(),
+          update: (_, walletsProvider, homeProvider) =>
+              homeProvider!..updateWalletsProvider(walletsProvider),
+        ),
         ChangeNotifierProvider(create: (_) => MovementsProvider()),
       ],
       child: MaterialApp.router(
