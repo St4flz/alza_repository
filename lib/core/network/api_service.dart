@@ -73,6 +73,31 @@ class ApiService {
     );
   }
 
+  /// Endpoint para eliminar la cuenta de usuario y todos sus datos relacionados.
+  Future<ApiResponse<Map<String, dynamic>>> deleteUserAccount() async {
+    return _request<Map<String, dynamic>>(
+      method: 'DELETE',
+      path: '/users/me',
+    );
+  }
+
+  /// Endpoint para realizar una transferencia de saldo entre billeteras.
+  Future<ApiResponse<Map<String, dynamic>>> createTransfer(Map<String, dynamic> data) async {
+    return _request<Map<String, dynamic>>(
+      method: 'POST',
+      path: '/transfers',
+      data: data,
+    );
+  }
+
+  /// Endpoint para obtener las transferencias del usuario.
+  Future<ApiResponse<List<dynamic>>> getTransfers() async {
+    return _request<List<dynamic>>(
+      method: 'GET',
+      path: '/transfers',
+    );
+  }
+
   /// Endpoint de ejemplo para registrar un nuevo movimiento financiero.
   Future<ApiResponse<Map<String, dynamic>>> createMovement(Map<String, dynamic> data) async {
     return _request<Map<String, dynamic>>(

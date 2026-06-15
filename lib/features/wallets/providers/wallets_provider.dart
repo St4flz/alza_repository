@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:alza/features/wallets/models/wallet_model.dart';
+import 'package:alza/features/wallets/models/transfer_model.dart';
 import 'package:alza/features/wallets/services/wallets_service.dart';
 
 class WalletsProvider extends ChangeNotifier {
@@ -7,6 +8,9 @@ class WalletsProvider extends ChangeNotifier {
 
   List<Wallet> _wallets = [];
   List<Wallet> get wallets => _wallets;
+
+  List<Transfer> _transfers = [];
+  List<Transfer> get transfers => _transfers;
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -125,6 +129,54 @@ class WalletsProvider extends ChangeNotifier {
     if (index >= 0 && index <= _wallets.length) {
       _wallets.insert(index, wallet);
       notifyListeners();
+    }
+  }
+
+  /// Carga el historial de transferencias desde el backend.
+  Future<bool> fetchTransfers() async {
+    _setLoading(true);
+    _setError(null);
+
+    final response = await _service.getTransfers();
+    if (response.success && response.data != null) {
+      _transfers = response.data!;
+      _setLoading(false);
+      return true;
+    } else {
+      _setError(response.message);
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  /// Realiza una transferencia e interactúa con el backend para actualizar balances localmente.
+  Future<bool> createTransfer({
+    required String originWalletId,
+    required String destWalletId,
+    required double amount,
+  }) async {
+    _setLoading(true);
+    _setError(null);
+
+    final response = await _service.createTransfer(
+      originWalletId: originWalletId,
+      destWalletId: destWalletId,
+      amount: amount,
+    );
+
+    if (response.success && response.data != null) {
+      // Agregar la transferencia exitosa al listado local
+      _transfers.insert(0, response.data!);
+      
+      // Volver a cargar las billeteras para actualizar los saldos reales
+      await fetchWallets();
+      
+      _setLoading(false);
+      return true;
+    } else {
+      _setError(response.message);
+      _setLoading(false);
+      return false;
     }
   }
 }

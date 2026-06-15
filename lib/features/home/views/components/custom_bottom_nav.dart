@@ -44,8 +44,10 @@ class CustomBottomNav extends StatelessWidget {
               ),
             ],
           ),
-          child: SafeArea(
-            child: Padding(
+          child: Material(
+            color: Colors.transparent,
+            child: SafeArea(
+              child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -60,48 +62,86 @@ class CustomBottomNav extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  // Cabecera con datos del usuario
-                  Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.verde.withOpacity(0.1),
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          color: AppColors.verde.solid,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Usuario',
-                              style: AppFonts.montserrat(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.negro.withOpacity(0.5),
+                  // Cabecera con datos del usuario - Clickable para ir al perfil
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      Navigator.pop(context); // Cierra el menú inferior
+                      context.push('/profile');
+                    },
+                    child: Row(
+                      children: [
+                        // Avatar dinámico
+                        authProvider.profile?['avatar_url'] != null &&
+                                (authProvider.profile!['avatar_url'] as String).startsWith('http')
+                            ? Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  image: DecorationImage(
+                                    image: NetworkImage(authProvider.profile!['avatar_url'] as String),
+                                    fit: BoxFit.cover,
+                                  ),
+                                  border: Border.all(
+                                    color: AppColors.verde.solid.withOpacity(0.2),
+                                    width: 1,
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: AppColors.verde.withOpacity(0.1),
+                                ),
+                                child: Icon(
+                                  Icons.person,
+                                  color: AppColors.verde.solid,
+                                  size: 28,
+                                ),
                               ),
-                            ),
-                            Text(
-                              user?.email ?? 'correo@ejemplo.com',
-                              style: AppFonts.montserrat(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.negro.solid,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                authProvider.profile?['full_name'] != null &&
+                                        (authProvider.profile!['full_name'] as String).isNotEmpty
+                                    ? authProvider.profile!['full_name'] as String
+                                    : (authProvider.profile?['username'] != null &&
+                                            (authProvider.profile!['username'] as String).isNotEmpty
+                                        ? authProvider.profile!['username'] as String
+                                        : 'Usuario'),
+                                style: AppFonts.montserrat(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.negro.solid,
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
+                              const SizedBox(height: 2),
+                              Text(
+                                user?.email ?? 'correo@ejemplo.com',
+                                style: AppFonts.montserrat(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.negro.withOpacity(0.5),
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: AppColors.negro.withOpacity(0.3),
+                          size: 16,
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 32),
                   // Opción: Cambiar contraseña
@@ -189,7 +229,8 @@ class CustomBottomNav extends StatelessWidget {
               ),
             ),
           ),
-        );
+        ),
+      );
       },
     );
   }

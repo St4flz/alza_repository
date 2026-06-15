@@ -1,54 +1,92 @@
 import 'package:flutter/material.dart';
-import 'package:alza/features/home/models/wallet.dart';
+import 'package:alza/features/wallets/models/wallet_model.dart' as model;
 
 class HomeProvider extends ChangeNotifier {
-  final List<Wallet> _wallets = const [
-    Wallet(
-      name: 'Nequi',
-      icon: Icons.badge_outlined,
-      totalAmount: '200.000',
-      movementsCount: 2,
-    ),
-    Wallet(
-      name: 'Efectivo',
-      icon: Icons.menu_book,
-      totalAmount: '125.000',
-      movementsCount: 1,
-    ),
-    Wallet(
-      name: 'Alcancia',
-      icon: Icons.savings_outlined,
-      totalAmount: '200.000',
-      movementsCount: 2,
-    ),
-  ];
+  List<model.Wallet> _realWallets = [];
+  List<model.Wallet> get wallets => _realWallets;
 
-  List<Wallet> get wallets => _wallets;
+  void setRealWallets(List<model.Wallet> wallets) {
+    // Avoid redundant calls and rebuild loops
+    bool changed = _realWallets.length != wallets.length;
+    if (!changed) {
+      for (int i = 0; i < wallets.length; i++) {
+        if (_realWallets[i].id != wallets[i].id || 
+            _realWallets[i].balance != wallets[i].balance ||
+            _realWallets[i].name != wallets[i].name) {
+          changed = true;
+          break;
+        }
+      }
+    }
+    if (changed) {
+      debugPrint('[HOME PROVIDER] Sincronizando ${_realWallets.length} -> ${wallets.length} billeteras reales.');
+      _realWallets = List.from(wallets);
+      notifyListeners();
+    }
+  }
 
-  String _selectedWalletName = '';
-  String get selectedWalletName => _selectedWalletName;
+  String _selectedWalletId = '';
+  String get selectedWalletId => _selectedWalletId;
+
+  String get selectedWalletName {
+    final selected = selectedWallet;
+    return selected?.name ?? '';
+  }
 
   void selectWallet(String walletName) {
-    if (_selectedWalletName == walletName) {
-      _selectedWalletName = '';
+    if (_realWallets.isEmpty) return;
+    try {
+      final wallet = _realWallets.firstWhere((w) => w.name == walletName);
+      if (_selectedWalletId == wallet.id) {
+        _selectedWalletId = '';
+      } else {
+        _selectedWalletId = wallet.id;
+      }
+      notifyListeners();
+    } catch (_) {
+      _selectedWalletId = '';
+      notifyListeners();
+    }
+  }
+
+  void selectWalletById(String walletId) {
+    if (_selectedWalletId == walletId) {
+      _selectedWalletId = '';
     } else {
-      _selectedWalletName = walletName;
+      _selectedWalletId = walletId;
     }
     notifyListeners();
   }
 
-  Wallet? get selectedWallet {
-    if (_selectedWalletName.isEmpty) return null;
-    return _wallets.firstWhere((w) => w.name == _selectedWalletName);
+  model.Wallet? get selectedWallet {
+    if (_selectedWalletId.isEmpty) return null;
+    try {
+      return _realWallets.firstWhere((w) => w.id == _selectedWalletId);
+    } catch (_) {
+      return null;
+    }
   }
 
   String get totalAmount {
     final selected = selectedWallet;
     if (selected != null) {
-      return selected.totalAmount;
+      return _formatCurrency(selected.balance);
     }
-    // Si no hay billetera seleccionada, el Gran Total es la suma de todas (525.000)
-    return '525.000';
+    // Sum of all wallets
+    final sum = _realWallets.fold<double>(0.0, (prev, element) => prev + element.balance);
+    return _formatCurrency(sum);
+  }
+
+  String _formatCurrency(double amount) {
+    final String str = amount.toStringAsFixed(0);
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) {
+        buffer.write('.');
+      }
+      buffer.write(str[i]);
+    }
+    return buffer.toString();
   }
 
   String get totalTitle {
@@ -60,6 +98,6 @@ class HomeProvider extends ChangeNotifier {
   }
 
   int get movementsCount {
-    return selectedWallet?.movementsCount ?? 2;
+    return selectedWallet != null ? 1 : 2; // Keep placeholder logic or adjust
   }
 }

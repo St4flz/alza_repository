@@ -7,6 +7,7 @@ import 'package:alza/features/auth/views/login_view.dart';
 import 'package:alza/features/home/views/home_view.dart';
 import 'package:alza/features/wallets/views/wallets_view.dart';
 import 'package:alza/features/user/views/change_password_view.dart';
+import 'package:alza/features/user/views/profile_view.dart';
 
 // Constantes de rutas para evitar typos
 abstract class AppRoutes {
@@ -17,6 +18,7 @@ abstract class AppRoutes {
   static const String wallets = '/wallets';
   static const String resetPassword = '/reset-password';
   static const String changePassword = '/change-password';
+  static const String profile = '/profile';
 }
 
 final appRouter = GoRouter(
@@ -48,7 +50,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.wallets,
-      builder: (context, state) => const WalletsView(),
+      builder: (context, state) {
+        final forceBalance = state.uri.queryParameters['forceInitialBalance'] == 'true';
+        return WalletsView(forceInitialBalance: forceBalance);
+      },
     ),
     GoRoute(
       path: AppRoutes.resetPassword,
@@ -61,6 +66,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.changePassword,
       builder: (context, state) => const ChangePasswordView(),
+    ),
+    GoRoute(
+      path: AppRoutes.profile,
+      builder: (context, state) => const ProfileView(),
     ),
   ],
 

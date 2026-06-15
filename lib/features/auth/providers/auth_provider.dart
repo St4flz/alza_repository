@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:alza/features/auth/services/auth_service.dart';
+import 'package:alza/core/network/api_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
+  final ApiService _apiService = ApiService();
   
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -16,6 +18,12 @@ class AuthProvider extends ChangeNotifier {
   String? get successMessage => _successMessage;
 
   User? get currentUser => _authService.currentUser;
+
+  Map<String, dynamic>? _profile;
+  Map<String, dynamic>? get profile => _profile;
+
+  bool _loadingProfile = false;
+  bool get loadingProfile => _loadingProfile;
 
   void _setLoading(bool value) {
     _isLoading = value;
@@ -149,6 +157,124 @@ class AuthProvider extends ChangeNotifier {
       return await _authService.checkEmailExists(email);
     } catch (e) {
       _setMessage(error: 'Error al buscar el correo');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> loadProfile() async {
+    final user = currentUser;
+    if (user == null) {
+      debugPrint('[PROFILE DEB] loadProfile: No hay usuario autenticado.');
+      _profile = null;
+      notifyListeners();
+      return;
+    }
+    
+    debugPrint('[PROFILE DEB] loadProfile: Cargando perfil para user_id: ${user.id}');
+    _loadingProfile = true;
+    notifyListeners();
+    
+    try {
+      final data = await Supabase.instance.client
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+          
+      debugPrint('[PROFILE DEB] loadProfile: Resultado de la consulta: $data');
+      if (data == null) {
+        debugPrint('[PROFILE DEB] loadProfile: El perfil no existe. Creando uno por defecto...');
+        final newProfile = {
+          'id': user.id,
+          'email': user.email ?? '',
+          'full_name': user.userMetadata?['full_name'] ?? '',
+          'avatar_url': user.userMetadata?['avatar_url'] ?? '',
+          'username': '',
+        };
+        await Supabase.instance.client.from('profiles').insert(newProfile);
+        _profile = newProfile;
+        debugPrint('[PROFILE DEB] loadProfile: Perfil por defecto creado e insertado.');
+      } else {
+        _profile = data;
+      }
+    } catch (e) {
+      debugPrint('[PROFILE DEB] ERROR al cargar perfil: $e');
+    } finally {
+      _loadingProfile = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateProfile({
+    String? username,
+    String? fullName,
+    String? avatarUrl,
+  }) async {
+    final user = currentUser;
+    if (user == null) {
+      debugPrint('[PROFILE DEB] updateProfile: No hay usuario autenticado.');
+      return false;
+    }
+    
+    debugPrint('[PROFILE DEB] updateProfile: Iniciando actualización para user_id: ${user.id}');
+    debugPrint('  - username: $username, fullName: $fullName, avatarUrl: $avatarUrl');
+    
+    try {
+      _setLoading(true);
+      final updates = <String, dynamic>{};
+      if (username != null) updates['username'] = username;
+      if (fullName != null) updates['full_name'] = fullName;
+      if (avatarUrl != null) updates['avatar_url'] = avatarUrl;
+      
+      await Supabase.instance.client.from('profiles').update(updates).eq('id', user.id);
+      debugPrint('[PROFILE DEB] updateProfile: Perfil actualizado en Supabase exitosamente.');
+      
+      // Reload local profile state
+      await loadProfile();
+      return true;
+    } catch (e) {
+      debugPrint('[PROFILE DEB] ERROR al actualizar perfil: $e');
+      _setMessage(error: 'Error al actualizar el perfil: $e');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<bool> deleteAccount() async {
+    final user = currentUser;
+    if (user == null) {
+      debugPrint('[DELETE ACCOUNT DEB] deleteAccount: No hay usuario autenticado.');
+      return false;
+    }
+    
+    debugPrint('[DELETE ACCOUNT DEB] deleteAccount: Solicitando eliminación para user_id: ${user.id}');
+    
+    try {
+      _setLoading(true);
+      clearMessages();
+      
+      final response = await _apiService.deleteUserAccount();
+      debugPrint('[DELETE ACCOUNT DEB] Respuesta del backend: success=${response.success}, message=${response.message}');
+      
+      if (response.success) {
+        _setMessage(success: response.message);
+        debugPrint('[DELETE ACCOUNT DEB] Cuenta eliminada con éxito en backend. Cerrando sesión local...');
+        // Cerrar sesión localmente en Supabase
+        await _authService.signOut();
+        _profile = null;
+        notifyListeners();
+        return true;
+      } else {
+        debugPrint('[DELETE ACCOUNT DEB] ERROR: El backend reportó falla en eliminación: ${response.message}');
+        _setMessage(error: response.message);
+        return false;
+      }
+    } catch (e) {
+      debugPrint('[DELETE ACCOUNT DEB] ERROR: Excepción durante el proceso de eliminación: $e');
+      _setMessage(error: 'Excepción al eliminar cuenta: $e');
       return false;
     } finally {
       _setLoading(false);
