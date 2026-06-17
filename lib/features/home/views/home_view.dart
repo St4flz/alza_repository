@@ -105,6 +105,13 @@ class _HomeViewState extends State<HomeView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: IconButton(
+                      icon: Icon(Icons.auto_awesome, color: AppColors.verde.solid, size: 28),
+                      onPressed: () => context.push('/chat'),
+                    ),
+                  ),
                   HeaderSection(
                     userName: authProvider.profile?['username']?.isNotEmpty == true
                         ? authProvider.profile!['username']

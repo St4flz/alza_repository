@@ -9,6 +9,7 @@ import 'package:alza/features/wallets/views/wallets_view.dart';
 import 'package:alza/features/user/views/change_password_view.dart';
 import 'package:alza/features/user/views/profile_view.dart';
 import 'package:alza/features/movements/views/add_movement_view.dart';
+import 'package:alza/features/chat/views/chat_view.dart';
 
 // Constantes de rutas para evitar typos
 abstract class AppRoutes {
@@ -21,6 +22,7 @@ abstract class AppRoutes {
   static const String changePassword = '/change-password';
   static const String profile = '/profile';
   static const String addMovement = '/add-movement';
+  static const String chat = '/chat';
 }
 
 final appRouter = GoRouter(
@@ -76,6 +78,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.addMovement,
       builder: (context, state) => const AddMovementView(),
+    ),
+    GoRoute(
+      path: AppRoutes.chat,
+      builder: (context, state) => const ChatView(),
     ),
   ],
 

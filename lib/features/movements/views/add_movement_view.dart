@@ -304,14 +304,14 @@ class _AddMovementViewState extends State<AddMovementView> {
     );
 
     if (success) {
-      // Recargar billeteras para tener saldos frescos
-      await walletsProvider.fetchWallets();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Movimiento registrado con éxito.'), backgroundColor: Colors.green),
         );
         Navigator.pop(context);
       }
+      // Recargar billeteras de fondo DESPUÉS de cerrar la vista para evitar crasheos por redibujado de Dropdowns obsoletos.
+      await walletsProvider.fetchWallets();
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -354,7 +354,7 @@ class _AddMovementViewState extends State<AddMovementView> {
           if (data['amount'] != null) _amountController.text = data['amount'].toString();
           if (data['raw_text'] != null) {
             _titleController.text = data['raw_text'];
-            _lastGeneratedTitle = data['raw_text']; // Para que updateDefaultTitle no lo sobreescriba
+            _lastGeneratedTitle = ''; // Borrar el last generated para que un cambio manual posterior no lo sobreescriba por accidente
           }
           
           if (data['category_id'] != null) {

@@ -5,6 +5,7 @@ import 'package:alza/features/auth/providers/auth_provider.dart';
 import 'package:alza/features/home/providers/home_provider.dart';
 import 'package:alza/features/wallets/providers/wallets_provider.dart';
 import 'package:alza/features/movements/providers/movements_provider.dart';
+import 'package:alza/features/chat/providers/chat_provider.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
               homeProvider!..updateWalletsProvider(walletsProvider),
         ),
         ChangeNotifierProvider(create: (_) => MovementsProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider()),
       ],
       child: MaterialApp.router(
         title: 'Alza+',
