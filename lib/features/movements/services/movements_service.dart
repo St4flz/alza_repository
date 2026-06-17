@@ -201,4 +201,9 @@ class MovementsService {
       message: response.message,
     );
   }
+
+  /// Procesa una imagen de recibo para extraer datos
+  Future<ApiResponse<Map<String, dynamic>>> processReceipt(String imageUrl) async {
+    return await _apiService.processReceipt(imageUrl);
+  }
 }

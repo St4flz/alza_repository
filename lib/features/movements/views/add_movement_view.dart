@@ -10,6 +10,10 @@ import 'package:alza/features/movements/models/category_model.dart';
 import 'package:alza/features/movements/models/tag_model.dart';
 import 'package:alza/features/movements/providers/movements_provider.dart';
 
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class AddMovementView extends StatefulWidget {
   const AddMovementView({super.key});
 
@@ -19,6 +23,7 @@ class AddMovementView extends StatefulWidget {
 
 class _AddMovementViewState extends State<AddMovementView> {
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _picker = ImagePicker();
 
   String _type = 'expense'; // 'expense' | 'income'
   Wallet? _selectedWallet;
@@ -313,6 +318,64 @@ class _AddMovementViewState extends State<AddMovementView> {
     }
   }
 
+  Future<void> _processReceipt() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+      if (image == null) return;
+      
+      final movementsProvider = Provider.of<MovementsProvider>(context, listen: false);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Procesando recibo, por favor espera...')),
+        );
+      }
+
+      final file = File(image.path);
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+      
+      // Upload to Supabase
+      await Supabase.instance.client.storage
+          .from('receipt_images')
+          .upload(fileName, file);
+          
+      final imageUrl = Supabase.instance.client.storage
+          .from('receipt_images')
+          .getPublicUrl(fileName);
+          
+      // Process with backend
+      final data = await movementsProvider.processReceipt(imageUrl);
+      
+      if (data != null && mounted) {
+        setState(() {
+          if (data['amount'] != null) _amountController.text = data['amount'].toString();
+          if (data['raw_text'] != null) _titleController.text = data['raw_text'];
+          // Intentar seleccionar categoría automáticamente
+          if (data['category_hint'] != null) {
+            final hint = data['category_hint'].toString().toLowerCase();
+            try {
+              _selectedCategory = movementsProvider.categories.firstWhere(
+                (c) => c.name.toLowerCase().contains(hint)
+              );
+            } catch (e) {
+              // No encontrada
+            }
+          }
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Datos extraídos exitosamente.'), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al procesar recibo: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final wallets = Provider.of<WalletsProvider>(context).wallets;
@@ -337,6 +400,13 @@ class _AddMovementViewState extends State<AddMovementView> {
             ),
           ),
           centerTitle: true,
+          actions: [
+            IconButton(
+              icon: Icon(Icons.camera_alt_outlined, color: AppColors.negro.solid),
+              onPressed: _processReceipt,
+              tooltip: 'Escanear recibo',
+            )
+          ],
         ),
         body: SafeArea(
           child: SingleChildScrollView(

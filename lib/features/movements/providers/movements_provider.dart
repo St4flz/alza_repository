@@ -159,4 +159,20 @@ class MovementsProvider extends ChangeNotifier {
     }
     return 0;
   }
+
+  /// Procesa una imagen de recibo
+  Future<Map<String, dynamic>?> processReceipt(String imageUrl) async {
+    _setLoading(true);
+    _setError(null);
+
+    final response = await _service.processReceipt(imageUrl);
+    _setLoading(false);
+    
+    if (response.success && response.data != null) {
+      return response.data;
+    } else {
+      _setError(response.message);
+      return null;
+    }
+  }
 }

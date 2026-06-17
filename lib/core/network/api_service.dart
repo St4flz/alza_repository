@@ -159,6 +159,15 @@ class ApiService {
     );
   }
 
+  // Endpoint para procesar una imagen de recibo
+  Future<ApiResponse<Map<String, dynamic>>> processReceipt(String imageUrl) async {
+    return _request<Map<String, dynamic>>(
+      method: 'POST',
+      path: '/receipts/process',
+      data: {'image_url': imageUrl},
+    );
+  }
+
   // =========================================================================
   // 2. MÉTODOS DE PETICIÓN AUXILIARES GENÉRICOS (NO MODIFICAR)
   // =========================================================================
