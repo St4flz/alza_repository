@@ -26,6 +26,7 @@ class _AddMovementViewState extends State<AddMovementView> {
   final ImagePicker _picker = ImagePicker();
 
   String _type = 'expense'; // 'expense' | 'income'
+  bool _isLoadingInitial = true;
   Wallet? _selectedWallet;
   Category? _selectedCategory;
   final List<Tag> _selectedTags = [];
@@ -48,16 +49,18 @@ class _AddMovementViewState extends State<AddMovementView> {
       await walletsProvider.fetchWallets();
 
       if (walletsProvider.wallets.isNotEmpty) {
-        setState(() {
-          _selectedWallet = walletsProvider.wallets.first;
-        });
-        _updateDefaultTitle();
+        _selectedWallet = walletsProvider.wallets.first;
       }
 
       if (movementsProvider.categories.isNotEmpty) {
+        _selectedCategory = movementsProvider.categories.first;
+      }
+      
+      if (mounted) {
         setState(() {
-          _selectedCategory = movementsProvider.categories.first;
+          _isLoadingInitial = false;
         });
+        _updateDefaultTitle();
       }
     });
   }
@@ -349,13 +352,15 @@ class _AddMovementViewState extends State<AddMovementView> {
       if (data != null && mounted) {
         setState(() {
           if (data['amount'] != null) _amountController.text = data['amount'].toString();
-          if (data['raw_text'] != null) _titleController.text = data['raw_text'];
-          // Intentar seleccionar categoría automáticamente
-          if (data['category_hint'] != null) {
-            final hint = data['category_hint'].toString().toLowerCase();
+          if (data['raw_text'] != null) {
+            _titleController.text = data['raw_text'];
+            _lastGeneratedTitle = data['raw_text']; // Para que updateDefaultTitle no lo sobreescriba
+          }
+          
+          if (data['category_id'] != null) {
             try {
               _selectedCategory = movementsProvider.categories.firstWhere(
-                (c) => c.name.toLowerCase().contains(hint)
+                (c) => c.id == data['category_id']
               );
             } catch (e) {
               // No encontrada
@@ -363,9 +368,16 @@ class _AddMovementViewState extends State<AddMovementView> {
           }
         });
         
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Datos extraídos exitosamente.'), backgroundColor: Colors.green),
-        );
+        final double confidence = (data['confidence'] ?? 0.0).toDouble();
+        if (confidence >= 0.8) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Datos extraídos con alta precisión.'), backgroundColor: Colors.green),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Por favor revisa los datos extraídos (confianza baja).'), backgroundColor: Colors.orange),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -408,7 +420,9 @@ class _AddMovementViewState extends State<AddMovementView> {
             )
           ],
         ),
-        body: SafeArea(
+        body: _isLoadingInitial 
+          ? const Center(child: CircularProgressIndicator()) 
+          : SafeArea(
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
