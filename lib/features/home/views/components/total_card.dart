@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:alza/app/style/app_colors.dart';
 
-class GrandTotalCard extends StatelessWidget {
+class GrandTotalCard extends StatefulWidget {
   final String amount;
   final String title;
 
@@ -12,6 +12,13 @@ class GrandTotalCard extends StatelessWidget {
   });
 
   @override
+  State<GrandTotalCard> createState() => _GrandTotalCardState();
+}
+
+class _GrandTotalCardState extends State<GrandTotalCard> {
+  bool _obscureText = false;
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -19,7 +26,7 @@ class GrandTotalCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
           child: Text(
-            title,
+            widget.title,
             style: TextStyle(
               color: AppColors.negro.withOpacity(0.5),
               fontSize: 14,
@@ -37,18 +44,25 @@ class GrandTotalCard extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                Icons.visibility_outlined,
-                color: AppColors.blanco.solid,
-                size: 20,
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _obscureText = !_obscureText;
+                  });
+                },
+                child: Icon(
+                  _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  color: AppColors.blanco.solid,
+                  size: 20,
+                ),
               ),
               Text(
-                amount,
+                _obscureText ? '••••' : widget.amount,
                 style: TextStyle(
                   color: AppColors.verde.solid,
                   fontSize: 28,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 1.2,
+                  letterSpacing: _obscureText ? 4.0 : 1.2,
                 ),
               ),
               Text(

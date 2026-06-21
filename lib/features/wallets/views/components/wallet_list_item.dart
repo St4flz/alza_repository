@@ -22,7 +22,7 @@ class WalletListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color contentColor = isActive ? AppColors.verde.solid : AppColors.blanco.solid;
+    final Color contentColor = isActive ? activeColor : AppColors.blanco.solid;
 
     return GestureDetector(
       onTap: onTap,
@@ -99,7 +99,7 @@ class WalletListItem extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.verde.solid.withOpacity(0.12),
+        color: activeColor.withOpacity(0.12),
       ),
       child: Container(
         width: 32,
@@ -107,7 +107,7 @@ class WalletListItem extends StatelessWidget {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.verde.solid.withOpacity(0.18),
+          color: activeColor.withOpacity(0.18),
         ),
         child: Container(
           width: 20,
@@ -116,7 +116,7 @@ class WalletListItem extends StatelessWidget {
             shape: BoxShape.circle,
             color: isActive ? const Color(0xFF6B7280) : AppColors.blanco.solid,
             border: Border.all(
-              color: AppColors.verde.solid.withOpacity(0.4),
+              color: activeColor.withOpacity(0.4),
               width: 1.5,
             ),
           ),

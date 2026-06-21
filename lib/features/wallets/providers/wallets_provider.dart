@@ -70,7 +70,6 @@ class WalletsProvider extends ChangeNotifier {
     return false;
   }
 
-  /// Crea una billetera en el backend e incrementa el listado local.
   Future<bool> createWallet({
     required String name,
     required double balance,
@@ -88,7 +87,12 @@ class WalletsProvider extends ChangeNotifier {
     );
 
     if (response.success && response.data != null) {
-      _wallets.add(response.data!);
+      // Forzamos el icono y color seleccionados por si el backend no los devuelve
+      final newWallet = response.data!;
+      newWallet.icon = icon;
+      newWallet.color = color;
+      
+      _wallets.add(newWallet);
       _setLoading(false);
       return true;
     } else {
