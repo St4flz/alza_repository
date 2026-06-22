@@ -11,13 +11,13 @@ class CustomBottomNav extends StatelessWidget {
     super.key,
     this.onPersonTap,
     this.onHomeTap,
-    this.onDocumentTap,
+    this.onAgentTap,
     this.onSettingsTap,
   });
 
   final VoidCallback? onPersonTap;
   final VoidCallback? onHomeTap;
-  final VoidCallback? onDocumentTap;
+  final VoidCallback? onAgentTap;
   final VoidCallback? onSettingsTap;
 
   void _showUserOptionsBottomSheet(BuildContext context) {
@@ -289,13 +289,27 @@ class CustomBottomNav extends StatelessWidget {
                 ),
               ],
             ),
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.verde.solid, width: 2),
+              ),
+              child: IconButton(
+                onPressed: () => context.push('/add-movement'),
+                icon: Icon(
+                  Icons.playlist_add,
+                  color: AppColors.verde.solid,
+                  size: 24,
+                ),
+              ),
+            ),
             Row(
               children: [
                 IconButton(
-                  onPressed: onDocumentTap ?? () {},
+                  onPressed: onAgentTap ?? () => context.push('/chat'),
                   icon: Icon(
-                    Icons.edit_document,
-                    color: AppColors.negro.solid,
+                    Icons.auto_awesome,
+                    color: AppColors.verde.solid,
                     size: 28,
                   ),
                 ),

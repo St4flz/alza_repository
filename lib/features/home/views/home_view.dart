@@ -105,13 +105,6 @@ class _HomeViewState extends State<HomeView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: IconButton(
-                      icon: Icon(Icons.auto_awesome, color: AppColors.verde.solid, size: 28),
-                      onPressed: () => context.push('/chat'),
-                    ),
-                  ),
                   HeaderSection(
                     userName: authProvider.profile?['username']?.isNotEmpty == true
                         ? authProvider.profile!['username']
@@ -191,35 +184,6 @@ class _HomeViewState extends State<HomeView> {
             ),
           ),
         ),
-        floatingActionButton: Container(
-          padding: const EdgeInsets.all(4),
-          margin: const EdgeInsets.only(bottom: 70),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.blanco.solid,
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.negro.withOpacity(0.05),
-                spreadRadius: 8,
-                blurRadius: 10,
-              ),
-            ],
-          ),
-          child: FloatingActionButton(
-            onPressed: () => context.push('/add-movement'),
-            backgroundColor: AppColors.blanco.solid,
-            elevation: 0,
-            shape: CircleBorder(
-              side: BorderSide(color: AppColors.verde.solid, width: 2),
-            ),
-            child: Icon(
-              Icons.playlist_add,
-              color: AppColors.verde.solid,
-              size: 32,
-            ),
-          ),
-        ),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: const CustomBottomNav(),
       ),
     );
