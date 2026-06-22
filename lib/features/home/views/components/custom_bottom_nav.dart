@@ -241,7 +241,7 @@ class CustomBottomNav extends StatelessWidget {
       bottom: true,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         decoration: BoxDecoration(
           color: AppColors.blanco.solid,
           borderRadius: BorderRadius.circular(32),
@@ -255,7 +255,9 @@ class CustomBottomNav extends StatelessWidget {
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Izquierda: Persona y Home
             Row(
               children: [
                 IconButton(
@@ -289,9 +291,12 @@ class CustomBottomNav extends StatelessWidget {
                 ),
               ],
             ),
+            
+            // Centro: Botón Agregar (Playlist Add Verde)
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                color: AppColors.blanco.solid,
                 border: Border.all(color: AppColors.verde.solid, width: 2),
               ),
               child: IconButton(
@@ -299,25 +304,27 @@ class CustomBottomNav extends StatelessWidget {
                 icon: Icon(
                   Icons.playlist_add,
                   color: AppColors.verde.solid,
-                  size: 24,
+                  size: 28,
                 ),
               ),
             ),
+
+            // Derecha: AI Stars (Chat) y Reports
             Row(
               children: [
                 IconButton(
-                  onPressed: onAgentTap ?? () => context.push('/chat'),
+                  onPressed: () => context.push('/chat'),
                   icon: Icon(
                     Icons.auto_awesome,
-                    color: AppColors.verde.solid,
+                    color: AppColors.negro.solid,
                     size: 28,
                   ),
                 ),
                 const SizedBox(width: 4),
                 IconButton(
-                  onPressed: onSettingsTap ?? () {},
+                  onPressed: () => context.push('/reports'),
                   icon: Icon(
-                    Icons.settings,
+                    Icons.bar_chart_rounded,
                     color: AppColors.negro.solid,
                     size: 28,
                   ),

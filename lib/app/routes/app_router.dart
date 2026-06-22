@@ -11,6 +11,7 @@ import 'package:alza/features/user/views/profile_view.dart';
 import 'package:alza/features/movements/views/add_movement_view.dart';
 import 'package:alza/features/movements/views/movements_list_view.dart';
 import 'package:alza/features/chat/views/chat_view.dart';
+import 'package:alza/features/reports/views/reports_view.dart';
 
 // Constantes de rutas para evitar typos
 abstract class AppRoutes {
@@ -25,6 +26,7 @@ abstract class AppRoutes {
   static const String addMovement = '/add-movement';
   static const String movements = '/movements';
   static const String chat = '/chat';
+  static const String reports = '/reports';
 }
 
 final appRouter = GoRouter(
@@ -88,6 +90,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: AppRoutes.chat,
       builder: (context, state) => const ChatView(),
+    ),
+    GoRoute(
+      path: AppRoutes.reports,
+      builder: (context, state) => const ReportsView(),
     ),
   ],
 
