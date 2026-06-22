@@ -155,7 +155,7 @@ class _HomeViewState extends State<HomeView> {
                   ),
                   const SizedBox(height: 32),
                   GestureDetector(
-                    onTap: () => context.push('/add-movement'),
+                    onTap: () => context.push('/movements'),
                     behavior: HitTestBehavior.opaque,
                     child: const SectionTitle(title: 'Últimos movimientos'),
                   ),
