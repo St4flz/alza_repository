@@ -3,6 +3,7 @@ import 'package:alza/features/wallets/models/wallet_model.dart';
 import 'package:alza/features/wallets/models/transfer_model.dart';
 import 'package:alza/features/wallets/services/wallets_service.dart';
 import 'package:alza/app/style/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WalletsProvider extends ChangeNotifier {
   final WalletsService _service = WalletsService();
@@ -37,6 +38,16 @@ class WalletsProvider extends ChangeNotifier {
     final response = await _service.getWallets();
     if (response.success && response.data != null) {
       _wallets = response.data!;
+      
+      // Load saved icons and colors from SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      for (var wallet in _wallets) {
+        final iconStr = prefs.getString('wallet_icon_${wallet.id}');
+        final colorStr = prefs.getString('wallet_color_${wallet.id}');
+        if (iconStr != null) wallet.icon = Wallet.parseIcon(iconStr);
+        if (colorStr != null) wallet.color = Wallet.parseColor(colorStr);
+      }
+
       _setLoading(false);
       return true;
     } else {
@@ -92,6 +103,11 @@ class WalletsProvider extends ChangeNotifier {
       newWallet.icon = icon;
       newWallet.color = color;
       
+      // Save locally
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('wallet_icon_${newWallet.id}', Wallet.iconToString(icon));
+      await prefs.setString('wallet_color_${newWallet.id}', Wallet.colorToHex(color));
+
       _wallets.add(newWallet);
       _setLoading(false);
       return true;
@@ -122,9 +138,22 @@ class WalletsProvider extends ChangeNotifier {
     );
 
     if (response.success && response.data != null) {
+      final updatedWallet = response.data!;
+      
+      if (icon != null) updatedWallet.icon = icon;
+      if (color != null) updatedWallet.color = color;
+      
+      final prefs = await SharedPreferences.getInstance();
+      if (icon != null) await prefs.setString('wallet_icon_${updatedWallet.id}', Wallet.iconToString(icon));
+      if (color != null) await prefs.setString('wallet_color_${updatedWallet.id}', Wallet.colorToHex(color));
+
       final index = _wallets.indexWhere((w) => w.id == id);
       if (index != -1) {
-        _wallets[index] = response.data!;
+        // preserve old icon/color if not updated
+        if (icon == null) updatedWallet.icon = _wallets[index].icon;
+        if (color == null) updatedWallet.color = _wallets[index].color;
+        
+        _wallets[index] = updatedWallet;
       }
       _setLoading(false);
       return true;
