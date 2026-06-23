@@ -32,6 +32,7 @@ class ChatView extends StatelessWidget {
           return Chat(
             messages: provider.messages,
             onSendPressed: provider.sendMessage,
+            onAttachmentPressed: provider.toggleRecording,
             user: provider.user,
             typingIndicatorOptions: TypingIndicatorOptions(
               typingUsers: provider.isTyping ? [const types.User(id: 'ai')] : [],
@@ -46,6 +47,10 @@ class ChatView extends StatelessWidget {
               sentMessageBodyTextStyle: AppFonts.montserrat(color: AppColors.blanco.solid),
               inputTextCursorColor: AppColors.negro.solid,
               sendButtonIcon: Icon(Icons.send_rounded, color: AppColors.verde.solid),
+              attachmentButtonIcon: Icon(
+                provider.isRecording ? Icons.stop_circle_rounded : Icons.mic_rounded, 
+                color: provider.isRecording ? Colors.red : AppColors.negro.solid,
+              ),
             ),
           );
         },
